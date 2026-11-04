@@ -10,7 +10,6 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영,
 - **교육 과정:** 경기인력개발원 Microsoft Cyber Security 8회차
 - **주요 학습 분야:** 클라우드 취약점, 시큐어 코딩, 클라우드 시스템 보안, 하이브리드 클라우드 보안 구축, Azure 클라우드 인프라, 데이터·앱 보안, 행위 기반 보안 탐지, 시스템 모의해킹
 - **주요 학습 도구:** VMware Workstation, Rocky Linux 9, Windows Server 2022, Windows 10·11, Xshell
-- **다음 학습 주제:** 클라우드 기반 취약점
 
 ## 🗂️ 학습 목차
 
