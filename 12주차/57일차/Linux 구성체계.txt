@@ -1,0 +1,10 @@
+Device			파티션			FileSystem			MountPoint			Size
+/dev/sdb			/dev/sdb1			ext3				/p1					3G
+				/dev/sdb2			ext4				/p2					3G
+				/dev/sdb3			xfs				/p3					나머지공간전부
+
+제출
+mount
+df -Th
+
+초기화 후 lsblk 결과 값 제출
