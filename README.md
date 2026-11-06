@@ -15,7 +15,7 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 
 | 순서 | 학습 자료 | 주요 내용 |
 |---|---|---|
-| 1 | [12주차](./12주차/) | VMware 가상화 실습 환경 구축, Linux 기본 명령어, 사용자·그룹 관리, ACL, 압축·스토리지 관리, Windows Server 공유 권한 및 DHCP 구성 |
+| 1 | [12주차](./12주차/) | VMware 가상화 실습 환경 구축, Linux 기본 명령어, 사용자·그룹 관리, ACL, 압축·스토리지·LVM 관리, Windows Server 공유 권한 및 DHCP 구성 |
 
 > 각 폴더의 세부 학습 내용은 해당 폴더에서 확인할 수 있습니다. 실제 실습 기록은 아래 날짜별 학습 기록에서도 확인할 수 있습니다.
 
@@ -66,7 +66,13 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - DHCP 서버 역할 설치, 범위 생성, 임대 기간·게이트웨이·DNS 옵션 설정
 - MAC 주소 기반 IP 예약과 클라이언트 IP 할당 확인
 
-### 8. 클라우드 보안 학습 확장
+### 8. Linux LVM 스토리지 관리
+
+- 스토리지 유형(DAS, NAS, SAN)과 클라우드 스토리지(Block, Object) 비교
+- LVM 구성 순서(파티션 → PV → VG → LV → 파일시스템 → 마운트) 이해
+- 논리 볼륨 생성, 디스크 추가를 통한 용량 확장, 구성 초기화 실습
+
+### 9. 클라우드 보안 학습 확장
 
 - 클라우드 취약점 및 시큐어 코딩
 - 클라우드 시스템 보안 및 하이브리드 클라우드 보안 구축
@@ -193,6 +199,50 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
   - VMware 가상 MAC 주소를 변경하여 예약 동작 확인, `ipconfig /all`로 할당 결과 확인
   - APIPA(Windows 전용): DHCP 서버가 없을 때 자동 할당되어 내부 네트워크 통신만 가능
   - 실습 후 DHCP 서버 역할 제거(범위 주소도 함께 삭제)
+- 실습 명령어 이력(`2026-11-05 Linux history.docx`) 정리
+
+### 2026-11-06 (58일차)
+
+**학습 주제: 스토리지 유형, 포트, Linux 디렉토리 구조, LVM**
+
+- 스토리지 유형
+  - DAS(Direct Attached Storage): IDE, SATA, SCSI 직접 연결, 구성이 쉽고 빠르지만 원격 설치와 확장이 어려움
+  - NAS(Network Attached Storage): 기존 네트워크에 구성, NFS·iSCSI 사용, 원격 설치와 확장이 쉽지만 속도가 낮고 병목 현상 발생 가능
+  - SAN(Storage Area Network): SAN 스위치와 Fiber Channel(HBA 카드) 구성, 속도가 빠르고 확장이 쉽지만 네트워크를 새로 구성해야 하고 비용이 높음
+  - 클라우드 스토리지: Block(디스크처럼 사용), Object(REST API, 객체별 URL과 ACL 설정, Azure Blob, AWS S3)
+- 파일 공유 프로토콜
+  - Windows는 CIFS(SMB)를 사용하며 Windows 10부터 NFS도 지원, `139`, `445` 포트
+  - Linux는 CIFS를 지원하지 않아 Samba로 대체
+- 포트 확인과 주요 포트
+  - Windows `netstat -na -p tcp`, Linux는 `/etc/services` 확인
+  - `20`·`21` FTP, `22` SSH, `23` Telnet, `25` SMTP, `53` DNS, `67`·`68` BOOTP(DHCP), `69` TFTP, `80` HTTP, `443` HTTPS
+  - `110` POP3(메일을 내려받으면 서버에 남지 않음), `143` IMAP4(서버에 남음), `139` NetBIOS, `445` SMB
+- Linux 복습
+  - 디스크 사용 순서는 파티션 → 파일시스템 → 마운트, 해제는 역순
+  - 설치 시 파티션 설정: swap(기본적으로 메모리의 2배), `/` 구성
+- Linux 디렉토리 구조
+  - `/dev`(장치 드라이버), `/boot`(부팅 파일), `/root`(root 홈), `/home`(일반 사용자 홈), `/bin`·`/sbin`(명령어), `/lib`·`/lib64`(라이브러리), `/var`(로그 등 가변 데이터), `/tmp`(임시), `/etc`(설정 파일), `/run`(실행 중 패키지의 pid), `/proc`(커널 메모리 상태)
+  - `/home`, `/var`는 별도 파티션으로 분리하여 용량 확장 가능
+- LVM(Logical Volume Manager)
+  - 물리 디스크를 논리적으로 통합하여 파일시스템을 관리하는 중간 계층
+  - 기존 구성: 파티션 → 파일시스템 → 마운트 / LVM 구성: 파티션 → PV → VG → LV → 파일시스템 → 마운트
+  - PV: `pvcreate`, `pvscan`, `pvs`, `pvdisplay`, `pvremove`
+  - VG: `vgcreate`, `vgscan`, `vgs`, `vgdisplay`, `vgextend`, `vgreduce`, `vgremove`
+  - LV: `lvcreate -L 3G -n 이름 VG명`, `lvextend`, `lvreduce`(데이터 손상 위험으로 가급적 사용하지 않음), `lvremove`
+  - 파티션 타입은 `fdisk`에서 `t` 선택 후 `8e`(Linux LVM)
+- LVM 생성 실습
+  - `/dev/sdb1`로 PV 생성, VG(`shkwon`)를 PE 크기 2MB(`-s 2M`)로 생성
+  - LV 3개를 만들어 각각 ext3, ext4, xfs로 포맷 후 `/p1`, `/p2`, `/p3`에 마운트
+  - 디스크(`/dev/sdc`) 추가 후 `pvcreate` → `vgextend` → `lvextend`로 확장, 파일시스템은 xfs는 `xfs_growfs`, ext3·ext4는 `resize2fs`로 확장
+  - 초기화는 생성의 역순: `umount` → `wipefs` → `lvremove` → `vgremove` → `pvremove` → 파티션 삭제
+- VMware 실습(`rocky9-lvm`)
+  - 설치 시 SCSI 50GB 디스크에 LVM으로 `/`, `/home`, `/var` 구성
+  - 10GB 디스크 추가 후 `pvcreate` → `vgextend` → `lvextend -l +2559` → `xfs_growfs`로 루트 볼륨 확장
+- LVM 과제([lvm 구성체계.txt](./12주차/58일차/lvm%20구성체계.txt))
+  - `/dev/sdb1` PV, 이니셜 VG, LV 3개(ext3 4GB `/p1`, ext4 4GB `/p2`, xfs 나머지 `/p3`) 구성 후 `mount`, `df -Th` 캡처
+  - `/dev/sdc1` 추가 후 LV 크기를 5GB, 6GB, 3GB로 확장하여 `df -Th` 캡처
+  - 초기화 후 `lsblk` 캡처
+- 실습 명령어 이력(`LVM Command History.docx`) 정리
 
 ## 🎯 학습 목표
 
@@ -200,6 +250,7 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - Linux와 Windows Server 기본 운영 및 계정·권한 관리 이해
 - ACL과 공유 권한을 활용한 부서·직급별 접근통제 설계
 - 파티션·파일시스템·마운트 구조 이해와 DHCP 서버 구성
+- LVM을 활용한 논리 볼륨 생성과 용량 확장
 - 클라우드 환경의 취약점 이해와 보안 구축 능력 향상
 
 ## 🔗 참고 링크
