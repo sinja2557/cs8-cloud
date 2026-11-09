@@ -16,6 +16,7 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 | 순서 | 학습 자료 | 주요 내용 |
 |---|---|---|
 | 1 | [12주차](./12주차/) | VMware 가상화 실습 환경 구축, Linux 기본 명령어, 사용자·그룹 관리, ACL, 압축·스토리지·LVM 관리, Windows Server 공유 권한 및 DHCP 구성 |
+| 2 | [13주차](./13주차/) | Linux 패키지 관리(dnf, rpm, 소스 설치), vi 편집기, Linux DHCP 서버 구성 |
 
 > 각 폴더의 세부 학습 내용은 해당 폴더에서 확인할 수 있습니다. 실제 실습 기록은 아래 날짜별 학습 기록에서도 확인할 수 있습니다.
 
@@ -72,7 +73,19 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - LVM 구성 순서(파티션 → PV → VG → LV → 파일시스템 → 마운트) 이해
 - 논리 볼륨 생성, 디스크 추가를 통한 용량 확장, 구성 초기화 실습
 
-### 9. 클라우드 보안 학습 확장
+### 9. Linux 패키지 관리
+
+- dnf, rpm, 소스 설치 방식의 차이와 의존성 문제 이해
+- `dnf` 저장소 설정과 설치·삭제·이력 관리(`dnf history`)
+- Apache httpd 소스 설치로 `configure` → `make` → `make install` 과정과 의존성 해결 순서 실습
+- `rpm` 명령어로 패키지 설치·조회·삭제
+
+### 10. vi 편집기와 Linux DHCP 서버
+
+- vi 편집기의 입력, 이동, 복사, 치환, 검색, 저장 명령어
+- `dhcp-server` 설치와 `dhcpd.conf` 설정, 임대 정보 확인, IP 예약
+
+### 11. 클라우드 보안 학습 확장
 
 - 클라우드 취약점 및 시큐어 코딩
 - 클라우드 시스템 보안 및 하이브리드 클라우드 보안 구축
@@ -244,6 +257,49 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
   - 초기화 후 `lsblk` 캡처
 - 실습 명령어 이력(`LVM Command History.docx`) 정리
 
+### 2026-11-09 (59일차)
+
+**학습 주제: Linux 패키지 관리, vi 편집기, Linux DHCP 서버**
+
+- 학습 흐름 정리
+  - Linux 1주차 복습: 기본 명령어, 파일 및 디렉토리, 사용자, 스토리지 관리
+  - Linux 2주차 학습 주제: 패키지 관리와 의존성 문제
+- 패키지 관리 방식 비교
+  - `dnf`(`yum`): 배포판 제작사가 제공하는 인터넷 저장소에서 내려받아 설치, 의존성 자동 해결, 커스터마이징 불가
+  - `rpm`: RHEL 계열 패키지 확장자, 파일을 내려받아 설치, 소스 설치보다 쉽지만 의존성을 직접 해결
+  - 소스 설치: 커스터마이징 가능, 의존성을 직접 해결, 환경 설정(`./configure`) → 컴파일(`make`) → 설치(`make install`)
+- `dnf` 실습
+  - 저장소 설정 파일 `/etc/yum.repos.d/rocky.repo`, 저장소 구성(BaseOS, AppStream, Extras)
+  - `dnf install httpd`, 설치 시 확인 질문에 `N`으로 취소, `-y` 옵션으로 자동 승인
+  - `dnf autoremove`로 삭제, `dnf history list`·`info`·`undo`·`redo`로 이력 조회와 되돌리기
+- 소스 설치 실습: Apache httpd 2.4.70
+  - 준비 패키지: `wget`, `tar`, `expat-devel`, `gcc`, `gcc-c++`
+  - 의존성 설치 순서: apr 1.7.6 → apr-util 1.6.6 → pcre 8.45 → httpd
+  - 각 단계에서 `./configure --prefix=경로`로 설치 위치를 지정하고 `--with-apr`, `--with-apr-util`, `--with-pcre`로 의존 패키지 경로 연결
+  - 오류 해결 과정: apr 누락 → apr-util 누락 → `pcre-config` 누락 순으로 오류가 발생하여 해당 패키지를 먼저 설치
+  - 명령어 연결: `&&`(앞 명령이 성공해야 실행), `||`(앞 명령이 실패해야 실행), `;`(성공·실패와 관계없이 실행)
+  - 설치 후 `/root/.bashrc`에 `PATH` 등록, `apachectl start`, 방화벽 `80/tcp` 허용, `index.html` 수정으로 웹 페이지 확인
+  - 스냅샷으로 되돌리고 초기화한 뒤 3회 반복 설치하여 순서 숙달, 과제 실습 후 `history` 제출
+- `rpm` 실습
+  - `dnf download --resolve`로 `createrepo` 패키지 내려받기
+  - `rpm -Uvh`로 설치할 때 의존성 오류가 발생하여 `createrepo_c-libs`를 먼저 설치
+  - 옵션: `-i`(설치), `-U`(업그레이드 설치), `-v`(과정 출력), `-h`(진행 표시), `-qa`(설치 확인), `-qi`(패키지 정보), `-ql`(관련 파일), `-qf`(파일이 속한 패키지), `-e`(삭제)
+  - `dnf localinstall`로 내려받은 rpm 설치, `dnf history list`에 기록됨
+- vi 편집기
+  - 입력: `a`, `i`, `o`, `s`와 대문자 `A`, `I`, `O`, `S`, 이동: `$`, `gg`(맨 앞줄), `G`(맨 뒷줄)
+  - 행 복사 `:3,4co12`, 치환 `:3s/무궁화/해당화/`, 전체 치환 `:%s/무궁화/해당화/g`
+  - 검색 `/해당화`와 `n`, 행 번호 표시 `:se nu`, 파일명과 줄 번호 확인 `Ctrl + g`
+  - 외부 명령 실행 `:!ls -la /`, 결과 삽입 `:$ r !ls -la /`, 파일 삽입 `:$ r /etc/passwd`
+  - 삭제 `10dd`, `:1,51d`, 실행 취소 `u`와 다시 실행 `Ctrl + r`, 저장 `:w`와 `ZZ`
+  - 참고 자료: [vi 명령어 정리표(vi.pdf)](./13주차/59일차/vi.pdf)
+- Linux DHCP 서버
+  - `dnf install -y dhcp-server` 설치 후 `/etc/dhcp/dhcpd.conf` 설정, 예제 파일 `/usr/share/doc/dhcp-server/dhcpd.conf.example` 참고
+  - `systemctl start dhcpd`로 시작, 오류 발생 시 `journalctl -xe`로 확인
+  - VMware의 Windows 10·11 가상머신을 켜서 IP 할당 확인, 임대 정보는 `/var/lib/dhcpd/dhcpd.leases`에서 확인
+  - `host 이름 { }` 구문으로 IP 예약 설정
+  - 삭제: `dnf autoremove`로 제거한 뒤 남은 `/etc/dhcp`, `/var/lib/dhcpd` 삭제
+  - 교수님 정답지를 참고해 설정 복습 후 과제 진행
+
 ## 🎯 학습 목표
 
 - VMware 기반 가상화 실습 환경 구축
@@ -251,6 +307,7 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - ACL과 공유 권한을 활용한 부서·직급별 접근통제 설계
 - 파티션·파일시스템·마운트 구조 이해와 DHCP 서버 구성
 - LVM을 활용한 논리 볼륨 생성과 용량 확장
+- dnf, rpm, 소스 설치 방식 비교와 Linux DHCP 서버 구성
 - 클라우드 환경의 취약점 이해와 보안 구축 능력 향상
 
 ## 🔗 참고 링크
