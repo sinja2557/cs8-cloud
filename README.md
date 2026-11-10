@@ -9,14 +9,14 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - **학습 기간:** 2026-11-02 ~ 2027-03-12
 - **교육 과정:** 경기인력개발원 Microsoft Cyber Security 8회차
 - **주요 학습 분야:** 클라우드 취약점, 시큐어 코딩, 클라우드 시스템 보안, 하이브리드 클라우드 보안 구축, Azure 클라우드 인프라, 데이터·앱 보안, 행위 기반 보안 탐지, 시스템 모의해킹
-- **주요 학습 도구:** VMware Workstation, Rocky Linux 9, Windows Server 2022, Windows 10·11, Xshell
+- **주요 학습 도구:** VMware Workstation, Rocky Linux 9, Windows Server 2022, Windows 10·11, Xshell, FileZilla, IIS
 
 ## 🗂️ 학습 목차
 
 | 순서 | 학습 자료 | 주요 내용 |
 |---|---|---|
 | 1 | [12주차](./12주차/) | VMware 가상화 실습 환경 구축, Linux 기본 명령어, 사용자·그룹 관리, ACL, 압축·스토리지·LVM 관리, Windows Server 공유 권한 및 DHCP 구성 |
-| 2 | [13주차](./13주차/) | Linux 패키지 관리(dnf, rpm, 소스 설치), vi 편집기, Linux DHCP 서버 구성 |
+| 2 | [13주차](./13주차/) | Linux 패키지 관리(dnf, rpm, 소스 설치), vi 편집기, Linux DHCP 서버 구성, FTP 서버 구성(Linux vsftpd, Windows IIS) |
 
 > 각 폴더의 세부 학습 내용은 해당 폴더에서 확인할 수 있습니다. 실제 실습 기록은 아래 날짜별 학습 기록에서도 확인할 수 있습니다.
 
@@ -85,7 +85,14 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - vi 편집기의 입력, 이동, 복사, 치환, 검색, 저장 명령어
 - `dhcp-server` 설치와 `dhcpd.conf` 설정, 임대 정보 확인, IP 예약
 
-### 11. 클라우드 보안 학습 확장
+### 11. FTP 서버 구성
+
+- FTP 동작 방식(제어 포트와 데이터 포트, Active·Passive 모드) 이해
+- Linux `vsftpd` 설치와 설정(접속 제한, 타임아웃, 배너, chroot, 로그, 파일 제한)
+- `firewall-cmd`로 방화벽 포트 허용, Windows 클라이언트 방화벽 설정
+- Windows IIS로 FTP 사이트 구성(인증, 권한 부여 규칙, IP 제한, 요청 필터링, 사용자 격리)
+
+### 12. 클라우드 보안 학습 확장
 
 - 클라우드 취약점 및 시큐어 코딩
 - 클라우드 시스템 보안 및 하이브리드 클라우드 보안 구축
@@ -300,6 +307,66 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
   - 삭제: `dnf autoremove`로 제거한 뒤 남은 `/etc/dhcp`, `/var/lib/dhcpd` 삭제
   - 교수님 정답지를 참고해 설정 복습 후 과제 진행
 
+### 2026-11-10 (60일차)
+
+**학습 주제: Linux DHCP 복습, FTP 서버(Linux vsftpd, Windows IIS)**
+
+- 가상 네트워크 구성 정리(Host, NAT(vmnet8), Host Only(vmnet1))
+- Linux DHCP 과제 복습
+  - 방화벽 포트 삭제 `firewall-cmd --remove-port=80/tcp`, vi 실행 취소 `u`와 다시 실행 `Ctrl + r`
+- Windows Server DHCP 복습(`W2K22-AD`)
+  - DHCP 서버가 2대이면 먼저 도착한 Offer의 서버에서 IP 할당
+  - 새 범위의 서브넷 지연(Offer 지연, 100ms)으로 서버 응답 우선순위 조절, Active·Standby 고가용성 구성
+  - 임대 시간의 1/2 시점에 갱신(Request, ACK), 7/8 시점까지는 유니캐스트로 요청하고 이후 브로드캐스트
+  - 범위 구성: `10.0.0.1` ~ `10.0.0.254`(`/24`), 제외 주소 `10.0.0.1` ~ `10.0.0.30`, `10.0.0.251` ~ `10.0.0.254`, 게이트웨이 `10.0.0.254`, 도메인 `이니셜.local`
+- FTP(File Transfer Protocol) 개념
+  - 대용량 파일 전송 서비스, Linux는 `vsftpd`, Windows는 IIS 사용
+  - TCP `21`번은 인증·제어 포트, 데이터 전송은 모드에 따라 다름
+  - Active 모드: 서버가 `20`번 포트로 클라이언트에 연결, 클라이언트 방화벽에서 차단되면 연결이 멈춤
+  - Passive 모드: 서버가 데이터 포트를 알려 주고 관리자가 지정한 포트만 개방
+- Linux FTP 실습(`vsftpd`, Rocky Linux)
+  - 사용자 `a`, `b` 생성 후 `dd`로 홈 디렉토리에 대용량 파일 생성
+  - `/etc/vsftpd/vsftpd.conf` 주요 설정
+    - 접속·권한: `anonymous_enable=NO`, `local_enable=YES`, `write_enable=YES`, `local_umask=022`
+    - 로그: `xferlog_enable=YES`, `xferlog_file` 경로 지정, `connect_from_port_20=YES`
+    - 타임아웃: `idle_session_timeout` 600초를 300초로, `data_connection_timeout` 120초를 60초로 변경
+    - 안내: `ftpd_banner` 문구 또는 `banner_file` 파일 지정
+    - 제한: `chroot_list_enable=YES`와 `chroot_list_file`로 목록의 사용자만 홈 디렉토리를 최상위로 제한(chroot), `allow_writeable_chroot=YES`, `deny_file`로 특정 확장자 차단
+  - anonymous는 비밀번호로 이메일 주소를 입력하는 방식
+  - 방화벽: `firewall-cmd --list-all`, `--get-zones`, `--get-default-zone`(`public`), `--get-service`
+    - `--permanent --add-port=21/tcp`, `20/tcp` 후 `--reload`(`--add-port`만 쓰면 재시작 시 사라짐)
+  - `ss -natlp`로 `21`번 포트 LISTEN 상태(`vsftpd`) 확인, 오류 시 `journalctl -xe` 확인, `setenforce 0`으로 SELinux 임시 해제
+  - Windows 10·11 클라이언트 접속(`ftp 10.0.0.11`)
+    - 명령어: `pwd`, `dir`, `get`, `put`, `mget`, `mput`, `lcd`(로컬 디렉토리 이동), `!dir`(로컬 목록)
+    - Windows Defender 방화벽 경고가 나오면 차단 규칙 2개를 삭제하고 `ftp.exe` 허용 인바운드 규칙 추가
+    - chroot 확인: 목록 사용자는 `/`가 최상위, 그 외 사용자는 상위 디렉토리 이동 가능
+    - FileZilla로 호스트 PC에서 접속(전송 모드는 능동형)
+  - 전송 로그 `xferlog`: `o`는 서버에서 클라이언트(out), `i`는 클라이언트에서 서버(in)
+  - 초기화(서비스 중지, `dnf autoremove`, 설정 디렉토리·사용자 삭제, 방화벽 포트 삭제)와 재설치를 4회 반복하여 숙달
+- 실습 과제: FTP 서버 구성 요구사항 2건
+  - 과제 1: 사용자 `a`, `b`와 500MB 파일, banner·chroot_list·xferlog를 별도 디렉토리에 저장, Active 모드, anonymous 차단, 접속 후 120초 무동작 시 종료, 데이터 전송 중 60초 경과 시 종료
+  - 과제 2: 사용자 `aaa`, `bbb`와 `aaa.txt`, `bbb.sh`(500MB), `bbb`만 chroot 적용, 3분 무동작 시 종료, 1분 데이터 전송 제한, `*.sh` 업로드·다운로드 금지(`550 Permission denied` 확인)
+  - 결과 확인: 본인 서버와 팀원 서버 3대에 `aaa`, `bbb`로 접속하여 `pwd` 결과 비교(`aaa`는 `/home/aaa`, chroot 적용된 `bbb`는 `/`)
+  - 결과 화면: `13주차/60일차` 폴더의 `*_aaa.png`, `*_bbb.png` 파일에서 확인(아래는 본인 서버 접속 결과)
+
+<img width="400" alt="본인 FTP 서버 aaa 접속 결과" src="./13주차/60일차/%EB%B3%B8%EC%9D%B8_aaa.png" /> <img width="400" alt="본인 FTP 서버 bbb 접속 결과" src="./13주차/60일차/%EB%B3%B8%EC%9D%B8_bbb.png" />
+
+- Windows FTP 실습(IIS, `W2K22-AD`)
+  - 서버 관리자에서 역할 추가: 웹 서버(IIS)의 FTP 서버(FTP 서비스)와 IIS 관리 콘솔 설치
+  - `Default Web Site` 삭제, `C:\01_FTP` 폴더 생성, PowerShell에서 `fsutil file createnew ftp.txt 1024`로 파일 생성
+  - `compmgmt.msc`의 로컬 사용자 및 그룹에서 사용자 `a`, `b` 생성
+  - FTP 사이트 추가: 이름 `shkwon_ftp`, 경로 `C:\01_FTP`, 포트 `21`, SSL 사용 안 함
+  - 인증과 권한: FTP 인증(기본 인증 사용, 익명 인증 사용 안 함)과 FTP 권한 부여 규칙(지정한 사용자 `a`, `b`의 읽기·쓰기)은 항상 함께 설정
+  - 부가 설정
+    - FTP IP 주소 및 도메인 제한: `10.0.0.101` 허용, 지정되지 않은 클라이언트는 거부
+    - FTP 디렉터리 검색(UNIX 스타일), FTP 로깅, FTP 메시지(배너와 `%username%님 안녕하세요` 시작 메시지)
+    - FTP 요청 필터링으로 `.sh` 확장자 거부, FTP 사용자 격리(FTP 루트 디렉터리), FTP 방화벽 지원
+    - 고급 설정에서 연결 제한 시간 확인
+  - 방화벽: 새 인바운드 규칙에서 포트 `20-21` 허용
+  - Windows 간 접속(`user b`)으로 시작 메시지와 로그인 확인, 허용되지 않은 접근은 `550 Access is denied`
+  - 초기화: 사이트 제거, DHCP 범위 제거, 사용자 제거, 기능 및 역할 제거, 스냅샷 복원
+  - 복습 시 DHCP 구성 완료 후 FTP 사이트를 처음부터 다시 구성
+
 ## 🎯 학습 목표
 
 - VMware 기반 가상화 실습 환경 구축
@@ -308,6 +375,7 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - 파티션·파일시스템·마운트 구조 이해와 DHCP 서버 구성
 - LVM을 활용한 논리 볼륨 생성과 용량 확장
 - dnf, rpm, 소스 설치 방식 비교와 Linux DHCP 서버 구성
+- FTP 동작 방식 이해와 Linux·Windows FTP 서버 구성
 - 클라우드 환경의 취약점 이해와 보안 구축 능력 향상
 
 ## 🔗 참고 링크
