@@ -9,14 +9,14 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - **학습 기간:** 2026-11-02 ~ 2027-03-12
 - **교육 과정:** 경기인력개발원 Microsoft Cyber Security 8회차
 - **주요 학습 분야:** 클라우드 취약점, 시큐어 코딩, 클라우드 시스템 보안, 하이브리드 클라우드 보안 구축, Azure 클라우드 인프라, 데이터·앱 보안, 행위 기반 보안 탐지, 시스템 모의해킹
-- **주요 학습 도구:** VMware Workstation, Rocky Linux 9, Windows Server 2022, Windows 10·11, Xshell, FileZilla, IIS
+- **주요 학습 도구:** VMware Workstation, Rocky Linux 9, Windows Server 2022, Windows 10·11, Xshell, FileZilla, IIS, BIND
 
 ## 🗂️ 학습 목차
 
 | 순서 | 학습 자료 | 주요 내용 |
 |---|---|---|
 | 1 | [12주차](./12주차/) | VMware 가상화 실습 환경 구축, Linux 기본 명령어, 사용자·그룹 관리, ACL, 압축·스토리지·LVM 관리, Windows Server 공유 권한 및 DHCP 구성 |
-| 2 | [13주차](./13주차/) | Linux 패키지 관리(dnf, rpm, 소스 설치), vi 편집기, Linux DHCP 서버 구성, FTP 서버 구성(Linux vsftpd, Windows IIS) |
+| 2 | [13주차](./13주차/) | Linux 패키지 관리(dnf, rpm, 소스 설치), vi 편집기, Linux DHCP 서버 구성, FTP 서버 구성(Linux vsftpd, Windows IIS, Passive 모드, 사용자 격리), DNS 서버(BIND) 구성 |
 
 > 각 폴더의 세부 학습 내용은 해당 폴더에서 확인할 수 있습니다. 실제 실습 기록은 아래 날짜별 학습 기록에서도 확인할 수 있습니다.
 
@@ -91,8 +91,16 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - Linux `vsftpd` 설치와 설정(접속 제한, 타임아웃, 배너, chroot, 로그, 파일 제한)
 - `firewall-cmd`로 방화벽 포트 허용, Windows 클라이언트 방화벽 설정
 - Windows IIS로 FTP 사이트 구성(인증, 권한 부여 규칙, IP 제한, 요청 필터링, 사용자 격리)
+- Linux·Windows FTP Passive 모드 구성(데이터 포트 범위 지정과 방화벽 규칙)
 
-### 12. 클라우드 보안 학습 확장
+### 12. DNS 서버(BIND)
+
+- DNS 개념(도메인과 IP 변환, UDP·TCP `53`번 포트, 루트 DNS 서버)
+- `bind`, `bind-utils`, `bind-libs` 설치와 `named.conf`, `named.rfc1912.zones`, 존 파일 구성
+- 정방향·역방향 존, A·CNAME·MX·PTR 레코드 작성, `nslookup`·`dig`로 질의 확인
+- 주 DNS·보조 DNS 구성과 Windows 클라이언트 DNS 설정
+
+### 13. 클라우드 보안 학습 확장
 
 - 클라우드 취약점 및 시큐어 코딩
 - 클라우드 시스템 보안 및 하이브리드 클라우드 보안 구축
@@ -367,6 +375,74 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
   - 초기화: 사이트 제거, DHCP 범위 제거, 사용자 제거, 기능 및 역할 제거, 스냅샷 복원
   - 복습 시 DHCP 구성 완료 후 FTP 사이트를 처음부터 다시 구성
 
+### 2026-11-11 (61일차)
+
+- 복습 전체 흐름 정리
+  - Linux(기본 명령어, 파일·디렉토리, 사용자·그룹, 디스크, 패키지, 프로세스) → 서버(DHCP, FTP, DNS, WEB, MAIL, NFS) → Windows → Active Directory → 그룹 정책
+- Linux FTP 복습 1: Active 모드 재구성(`vsftpd`, `rocky9-2`)과 Windows ↔ Linux 접속 확인
+  - Linux DHCP(`dhcpd.conf`) 구성 후 FTP 서버 접속 확인
+- Windows FTP 복습(`W2K22-AD`)
+  - 사용자 `a`, `b` 생성, `C:\01_FTP\ftp.txt` 생성, DHCP 새 범위 구성, IIS FTP 사이트 구성, 방화벽 `20-21` 허용
+  - Windows ↔ Windows 접속으로 탐색 확인
+  - FTP 사용자 격리
+    - 격리 미사용: 로그인 후 상위 폴더 탐색 가능
+    - 격리 사용(`LocalUser` 폴더 아래 사용자별 폴더, 예: `a` 폴더에 `aa.txt`, `b` 폴더에 `bb.txt`): 자기 폴더 밖으로 탈출 불가
+- 구성 복습: 1. DHCP, 2. FTP(사용자 격리)
+- Linux FTP Passive 모드(`vsftpd`)
+  - `/etc/vsftpd/vsftpd.conf` 설정: `pasv_enable=YES`, `pasv_min_port=65000`, `pasv_max_port=65010`, `allow_writeable_chroot=YES`, `deny_file={*.sh}`
+  - 배너 파일(`/shkwon/ban`, `/shkwon/ch`)에 접속 경고 문구 작성
+  - 방화벽: `firewall-cmd --permanent --add-port=21/tcp`, `--add-port=65000-65010/tcp` 후 `--reload`
+  - FileZilla로 Guest PC(`w10`)에서 `a.txt` 다운로드, `w11`에서 접속 확인
+  - `deny_file` 확인: `b.sh` 업로드는 거부되고 `b.txt`로 변경 시 정상 동작
+  - `ss -nat`으로 `21`번 포트 LISTEN과 데이터 연결 상태 확인
+- Windows FTP Passive 모드(IIS)
+  - FTP 방화벽 지원의 전역 설정에서 데이터 채널 포트 범위 `60000-60010` 지정, 사이트 중지 후 시작
+  - 방화벽 인바운드 규칙에 `60000-60010` 허용, `w10`에서 접속 확인
+- DNS(Domain Name System) 개념
+  - 도메인(URL)을 IP 주소로 변환하는 서비스
+  - 기본 프로토콜은 UDP `53`번, 다음 두 경우에만 TCP 사용
+    - 응답 데이터가 512 byte 초과
+    - 영역 전송(Zone Transfer)
+  - 전 세계 루트 DNS 서버는 13대로 제한
+  - 설치: `dnf install -y bind bind-utils bind-libs`
+  - 구성 파일: `/etc/named.conf` ← `/etc/named.rfc1912.zones` ← `/var/named/` 레코드 파일
+  - `dig naver.com +trace`로 루트 DNS → `com` 도메인 DNS → `naver.com` 네임서버 순서의 질의 과정 확인(DNSSEC 레코드 `DS`, `RRSIG` 포함)
+  - 한국인터넷진흥원(KISA) 인터넷 주소자원 사이트에서 IP 주소 체계, 도메인 네임 시스템, DNSSEC 자료 확인
+  - 도메인 구매: 가비아에서 `shkwon.shop` 도메인 구입 완료(실습은 `shkwon.local` 사설 도메인 사용)
+- 구성 체계도 확인(`구성체계_역할추가.png`)
+  - 서버별 역할: `rocky9-1` DHCP, 주 DNS, WEB(Blog, Main), NFS 서버 / `rocky9-2` FTP, 보조 DNS, WEB(Blog, Main, Intra), NFS 클라이언트 / `rocky9-3` 보조 DNS, WEB(Main, Intra), Mail
+  - Windows: `W2K22-AD`(DHCP, 주 DNS, WEB), `W2K22-MEM1`(FTP, 보조 DNS, WEB), `W2K22-MEM2`(보조 DNS, WEB, Mail), `w10-1`·`w11-1`(Mail, NFS 클라이언트)
+  - 전체 NIC는 NAT, 서브넷 마스크 `255.255.255.0`, 기본 게이트웨이 `10.0.0.254`
+
+<img width="700" alt="구성 체계도" src="./13주차/61일차/2026-11-11%20%EA%B5%AC%EC%84%B1%EC%B2%B4%EA%B3%84_%EC%97%AD%ED%95%A0%EC%B6%94%EA%B0%80.png" />
+
+- DNS 구성 실습 1(`rocky9-1`, 주 DNS)
+  - Windows 클라이언트의 기본 DNS 서버를 `rocky9-1`로 지정(`nslookup`은 주 DNS만 질의하고 보조 DNS는 확인하지 않음)
+  - `/etc/named.conf`의 `options`에서 `listen-on port 53 { any; }`, `allow-query { any; }`로 변경
+  - `/etc/named.rfc1912.zones`에 정방향 존 `shkwon.local`(`type master`, `file "1"`)과 역방향 존 `0.0.10.in-addr.arpa`(`file "2"`) 추가, 두 존 모두 `allow-update { none; }`(이 단계에서는 역방향 레코드 미작성)
+  - `/var/named/named.localhost`를 복사해 존 파일 `1` 작성, 존 파일 권한 `chmod o+r` 부여
+  - 존 파일 `1`: `$TTL 1D`, `SOA`(`ns1.shkwon.local.`), `NS`, `MX 10`, `A` 레코드(`www`, `ftp`, `ns1`, `mx1`), `CNAME` 레코드(`babo` → `ftp`)
+  - 도메인으로 끝나는 이름은 반드시 끝에 `.`(점) 지정
+  - `systemctl start named`, `firewall-cmd --permanent --add-port=53/udp` 후 `--reload`
+  - 확인: Windows `nslookup`으로 `shkwon.local`, `www.shkwon.local`, `ftp.shkwon.local` 정방향 질의
+  - FTP 서버 접속이 안 될 때는 보조 DNS 서버를 제외하고 확인
+- DNS 구성 실습 2(`rocky9-2`)
+  - `vsftpd` 설정을 다시 구성하고 `ftp.shkwon.local`로 FTP 접속, 배너와 로그인 성공 확인
+  - 재귀(순환) 쿼리 개념 정리
+- DNS 복습 2: 초기화 후 재구성
+  - 초기화: 방화벽 `53/udp` 삭제, `dnf remove bind bind-utils bind-libs`, `named.conf.rpmsave`, `named.rfc1912.zones.rpmsave`, `/var/named/` 삭제
+  - 재설치 후 `named.conf` 수정, `vi`의 `:23,27co$`, `:41,45co$` 명령으로 기존 존 설정 블록 복사 후 정방향·역방향 존 작성
+  - 정방향 존 파일 `1`: `A` 레코드와 `MX` 레코드(`mx1`) 추가, 역방향 존 파일 `2`: `PTR` 레코드(`11` → `ns1.shkwon.local.`)
+  - `rocky9-2`, `rocky9-3`에 `httpd` 설치 후 `systemctl start httpd`, 방화벽 `80/tcp` 허용
+  - `nslookup` 확인: 하나의 이름(`www`)에 `10.0.0.11`, `10.0.0.12`, `10.0.0.13` 세 개의 `A` 레코드를 등록하면 모든 주소가 응답
+- DNS 복습 3: 이전 데이터 삭제 후 재구성
+  - `rocky9-1`의 `/var/www/html/index.html`에 `SHKWON-WEBSERVER-1` 작성, `bind`·`bind-utils`·`bind-libs` 재설치
+  - `named.conf`, `named.rfc1912.zones`, 존 파일 `1`·`2` 재작성(`www`는 `10.0.0.11`, `10.0.0.12`, `10.0.0.13` 등록, `ftp`는 `10.0.0.12`, `mx1`은 `10.0.0.13`)
+  - 존 파일 `1`·`2`에 `chmod o+r` 부여, `systemctl start named`, `53/udp` 허용
+  - `ipconfig /flushdns` 후 `nslookup`으로 `www.shkwon.local`의 다중 주소 응답 확인
+- 2026-11-11 과제 결과
+  - `w10-1`의 브라우저에서 `shkwon.local`을 포함한 각 구성원의 `이니셜.local` 도메인으로 접속, 도메인별 WEB 서버 페이지 정상 출력
+
 ## 🎯 학습 목표
 
 - VMware 기반 가상화 실습 환경 구축
@@ -375,7 +451,8 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - 파티션·파일시스템·마운트 구조 이해와 DHCP 서버 구성
 - LVM을 활용한 논리 볼륨 생성과 용량 확장
 - dnf, rpm, 소스 설치 방식 비교와 Linux DHCP 서버 구성
-- FTP 동작 방식 이해와 Linux·Windows FTP 서버 구성
+- FTP 동작 방식 이해와 Linux·Windows FTP 서버 구성(Active·Passive 모드, 사용자 격리)
+- DNS 동작 원리 이해와 BIND 기반 정방향·역방향 DNS 서버 구성
 - 클라우드 환경의 취약점 이해와 보안 구축 능력 향상
 
 ## 🔗 참고 링크
