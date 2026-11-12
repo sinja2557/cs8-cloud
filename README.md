@@ -9,14 +9,14 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - **학습 기간:** 2026-11-02 ~ 2027-03-12
 - **교육 과정:** 경기인력개발원 Microsoft Cyber Security 8회차
 - **주요 학습 분야:** 클라우드 취약점, 시큐어 코딩, 클라우드 시스템 보안, 하이브리드 클라우드 보안 구축, Azure 클라우드 인프라, 데이터·앱 보안, 행위 기반 보안 탐지, 시스템 모의해킹
-- **주요 학습 도구:** VMware Workstation, Rocky Linux 9, Windows Server 2022, Windows 10·11, Xshell, FileZilla, IIS, BIND
+- **주요 학습 도구:** VMware Workstation, Rocky Linux 9, Windows Server 2022, Windows 10·11, Xshell, FileZilla, IIS, BIND, Sysinternals(BGInfo)
 
 ## 🗂️ 학습 목차
 
 | 순서 | 학습 자료 | 주요 내용 |
 |---|---|---|
 | 1 | [12주차](./12주차/) | VMware 가상화 실습 환경 구축, Linux 기본 명령어, 사용자·그룹 관리, ACL, 압축·스토리지·LVM 관리, Windows Server 공유 권한 및 DHCP 구성 |
-| 2 | [13주차](./13주차/) | Linux 패키지 관리(dnf, rpm, 소스 설치), vi 편집기, Linux DHCP 서버 구성, FTP 서버 구성(Linux vsftpd, Windows IIS, Passive 모드, 사용자 격리), DNS 서버(BIND) 구성 |
+| 2 | [13주차](./13주차/) | Linux 패키지 관리(dnf, rpm, 소스 설치), vi 편집기, Linux DHCP 서버 구성, FTP 서버 구성(Linux vsftpd, Windows IIS, Passive 모드, 사용자 격리), DNS 서버(BIND) 주·보조 구성, Windows 계정 정책·보안 옵션, Windows IIS 웹·DNS 서버 구성 |
 
 > 각 폴더의 세부 학습 내용은 해당 폴더에서 확인할 수 있습니다. 실제 실습 기록은 아래 날짜별 학습 기록에서도 확인할 수 있습니다.
 
@@ -98,9 +98,21 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - DNS 개념(도메인과 IP 변환, UDP·TCP `53`번 포트, 루트 DNS 서버)
 - `bind`, `bind-utils`, `bind-libs` 설치와 `named.conf`, `named.rfc1912.zones`, 존 파일 구성
 - 정방향·역방향 존, A·CNAME·MX·PTR 레코드 작성, `nslookup`·`dig`로 질의 확인
-- 주 DNS·보조 DNS 구성과 Windows 클라이언트 DNS 설정
+- 주 DNS·보조 DNS 구성(슬레이브 존, 영역 전송)과 Windows 클라이언트 DNS 설정
 
-### 13. 클라우드 보안 학습 확장
+### 13. Windows 계정 정책과 보안 옵션
+
+- 로컬 보안 정책(`gpedit.msc`)의 암호 정책과 계정 잠금 정책 설정
+- 보안 옵션: Administrator 계정 이름 변경, 마지막 로그온 사용자 이름 숨김, 로그온 경고 메시지
+- `gpupdate /force`로 정책 즉시 적용, 정책 적용 결과 로그인 화면에서 확인
+
+### 14. Windows 웹·DNS 서버
+
+- IIS 웹 사이트 구성(기본 문서 우선순위, 익명 인증)과 Default Web Site 제거
+- Windows DNS 서버의 정방향·역방향 주 영역, 보조 영역, 영역 전송 허용 구성
+- Sysinternals(BGInfo, Autoruns, TCPView) 도구 확인
+
+### 15. 클라우드 보안 학습 확장
 
 - 클라우드 취약점 및 시큐어 코딩
 - 클라우드 시스템 보안 및 하이브리드 클라우드 보안 구축
@@ -443,6 +455,78 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - 2026-11-11 과제 결과
   - `w10-1`의 브라우저에서 `shkwon.local`을 포함한 각 구성원의 `이니셜.local` 도메인으로 접속, 도메인별 WEB 서버 페이지 정상 출력
 
+### 2026-11-12 (62일차)
+
+- 주제 메모: OWASP Top 10 확인
+- 1교시: Linux 서버 구성(`rocky9-1`, `rocky9-2`, `rocky9-3`)
+  - DHCP(`rocky9-1`, `dhcp-server`)
+    - `dhcpd.conf` 범위 `10.0.0.31` ~ `10.0.0.250`, 도메인 `shkwon.local`, 게이트웨이 `10.0.0.254`, 임대 시간 `7200`초
+    - DNS 서버 주소를 `10.0.0.11`(자기 자신)로 변경, 대외 DNS는 `168.126.63.1` 추가
+    - `w10`, `w11`은 MAC 주소 기준으로 `10.0.0.101`, `10.0.0.201` 예약
+  - 주 DNS(`rocky9-1`, `bind`)
+    - `named.conf`의 `options`에서 `listen-on port 53 { any; }`, `allow-query { any; }` 설정, DNSSEC 키 파일(`/etc/named.root.key`) include 확인
+    - `named.rfc1912.zones`에 정방향 존 `shkwon.local`(파일 `1`), 역방향 존 `0.0.10.in-addr.arpa`(파일 `2`)를 `type master`로 추가, `allow-update`에 보조 DNS 주소 `10.0.0.12`, `10.0.0.13` 지정
+    - `named.localhost`, `named.loopback`을 복사해 존 파일 `1`, `2` 작성 후 `chmod o+r` 부여
+    - 존 파일 `1`: `NS`(`ns1`, `ns2`, `ns3`), `MX 10`(`mx1`), `@`와 `www`에 `10.0.0.11`, `10.0.0.12`, `10.0.0.13` 3개 `A` 레코드, `ftp`, `ns1` ~ `ns3`, `mx1`, `CNAME`(`babo` → `ftp`)
+    - 존 파일 `2`: `PTR` 레코드 `11`, `12`, `13` → `ns1` ~ `ns3`
+    - 방화벽 `53/{tcp,udp}` 허용 후 `systemctl restart named`
+  - 웹 서버(3대 공통): `httpd` 설치, `/var/www/html/index.html`에 `SHKWON-WEBSERVER-1`, `-2`, `-3` 작성, 방화벽 `80/tcp` 허용 후 `systemctl start httpd`
+  - FTP(`rocky9-2`, `vsftpd`)
+    - 접속 거부 목록 파일 `/etc/vsftpd/user_list`와 `userlist_enable=YES` 옵션 확인
+    - 사용자 `a`, `b` 생성 후 `dd`로 300M 파일(`a.txt`, `b.sh`) 생성, 배너 파일 `/shkwon/ban`, `/shkwon/ch` 작성
+    - `pasv_min_port=65000`, `pasv_max_port=65010`, `deny_file={*.sh}` 설정, 방화벽 `21/tcp`, `65000-65010/tcp` 허용 후 `systemctl restart vsftpd`
+  - `w10`, `w11`에서 `ipconfig /release`, `/renew`로 주소 재발급 후 `www.shkwon.local` 접속
+    - 같은 이름에 `A` 레코드가 여러 개이면 접속할 때마다 `SHKWON-WEBSERVER-1`, `-2` 등 서로 다른 서버 화면 출력
+- 2교시: 보조 DNS 구성
+  - `rocky9-2`, `rocky9-3`: `bind` 설치, `named.conf`의 `options` 설정, 존을 `type slave`, `masters { 10.0.0.11; }`로 구성(zone 구성만 정확히 작성)
+  - 주 DNS의 존 파일 수정 시 시리얼 번호를 올려 보조 DNS에 변경 사항 전파(`0` → `2` → `4` → `8`)
+  - 보조 DNS의 `/var/named/`에 존 파일 `1`, `2`가 자동 생성되고 소유자가 `named`로 표시되는 것으로 영역 전송 확인
+  - Windows 클라이언트의 DNS 서버를 `10.0.0.12`, `10.0.0.13`으로 바꿔 `nslookup` 해도 주 DNS와 같은 응답 확인
+- 3, 4교시: 복습(전체 재구성)
+  - `rocky9-1`: `dnf install -y dhcp-server bind bind-utils bind-libs httpd`로 DHCP, DNS, 웹 서버를 한 번에 설치
+  - `rocky9-2`: `vsftpd`, `bind`, `httpd` / `rocky9-3`: `bind`, `httpd` 설치, `dnf history list`로 설치 이력 확인
+  - DHCP, 주·보조 DNS, 웹, FTP를 처음부터 다시 구성하고 `w10`, `w11`에서 접속 확인
+- 5교시: Windows 계정 정책과 보안 옵션(`W2K22-AD`, `W2K22-MEM2`)
+  - 로컬 그룹 정책 편집기(`gpedit.msc`): 컴퓨터 구성 → Windows 설정 → 보안 설정 → 계정 정책
+  - 암호 정책: 복잡성 사용, 최대 암호 사용 기간 42일, 최소 암호 길이 7문자 확인
+    - 정책에 맞지 않는 암호로 `compmgmt.msc`에서 사용자를 만들면 오류 발생
+  - 계정 잠금 정책: 잠금 임계값 5회, 잠금 기간 5분(`2`분에서 변경), 관리자 계정 잠금 허용은 사용 안 함
+    - 비밀번호를 5회 틀리면 "참조된 계정이 현재 잠겨 있으므로 로그온할 수 없습니다" 메시지 출력
+  - 보안 옵션
+    - 시스템 종료: 로그온하지 않고 시스템 종료 허용, 로그인 화면에 종료 버튼 표시
+    - 대화형 로그온: 마지막 로그온 사용자 이름 표시 안 함 → 기타 사용자 화면으로 변경
+    - 대화형 로그온 메시지: 제목 `보안 경고!!`, 본문 `비인가자 무단 접근 시 형사 처벌 대상이 됩니다.`
+    - 계정: Administrator 계정 이름 바꾸기
+  - `gpupdate /force` 적용 후 로그아웃·재로그인으로 확인
+  - 실습 후 `W2K22` 전체를 스냅샷으로 초기화, `W2K22-MEM1`, `W2K22-MEM2`는 원격 데스크톱 서비스 삭제 후 초기 설정 스냅샷 생성
+  - `W2K22-AD`에 DHCP, DNS, 웹 서버(IIS) 역할 설치, DHCP에서 `w10`, `w11` 주소 예약(`10.0.0.101`, `10.0.0.201`)
+- 6교시: Sysinternals와 Windows 서버 구성
+  - Sysinternals 도구 다운로드(`Autoruns64`, `TCPView64`, `BGInfo64`)
+    - `BGInfo`로 바탕화면에 Host Name, IP Address, Default Gateway 표시(`W2K22-AD` `10.0.0.21`, `W2K22-MEM1` `10.0.0.22`, `W2K22-MEM2` `10.0.0.23`)
+  - `W2K22-MEM1`(FTP): 사용자 `a`, `b` 생성, PowerShell로 `C:\01_FTP\LocalUser\a\a.txt`, `b\b.txt` 생성
+    - IIS 역할 서비스에서 FTP 서버와 관리 도구 설치, FTP 사이트 `shkwon_ftp`(경로 `C:\01_FTP`, 포트 `21`, SSL 사용 안 함, 기본 인증 사용, `a`, `b` 읽기·쓰기 허용)
+    - FTP 메시지(배너 `Warning! SHKWON-W2K22-FTPSERVER`, 시작 메시지 `%username%님 안녕하세요`)
+    - FTP 사용자 격리: 사용자 이름 실제 디렉터리 사용
+    - FTP 방화벽 지원의 데이터 채널 포트 범위 `60000-60010`, 방화벽 규칙 `60000-60010`, `21` 허용 후 FTP 서비스 재시작
+    - `w10`에서 `ftp 10.0.0.22` 접속, `a`와 `b` 모두 자기 폴더의 파일(`a.txt`, `b.txt`)만 조회
+  - Default Web Site에 취약점이 있어 `W2K22-AD`, `MEM1`, `MEM2`에서 모두 삭제
+  - 웹 사이트 구성(AD, MEM1, MEM2 공통)
+    - `C:\11_web\index.html` 작성(`SHKWON-W2K22-WEBSERVER-번호`), 웹 사이트 `shkwon_main` 추가(포트 `80`)
+    - 인증은 익명 인증 사용, 기본 문서에서 `index.html`을 맨 위로 이동
+- 7교시: Windows DNS 서버
+  - `W2K22-AD`(주 DNS)
+    - 정방향 조회 영역 `shkwon.local` 추가: 주 영역, 파일 `shkwon.local.dns`, 동적 업데이트 허용 안 함
+    - 이름 서버 탭에 `ns1.shkwon.local`(`10.0.0.21`) 등록, `ns2`, `ns3` 추가
+    - 레코드: `@`, `www`에 `10.0.0.21`, `10.0.0.22`, `10.0.0.23`, `ftp`(`10.0.0.22`), `ns1` ~ `ns3`, `CNAME`(`babo` → `ftp.shkwon.local`), `wwww`
+    - 역방향 조회 영역 `0.0.10.in-addr.arpa`(IPv4, 네트워크 ID `10.0.0`) 생성 후 `PTR` 레코드 `10.0.0.21` ~ `10.0.0.23` → `ns1` ~ `ns3`
+    - 영역 전송 허용: 다음 서버로만(`10.0.0.22`, `10.0.0.23`)
+  - `W2K22-MEM1`, `W2K22-MEM2`(보조 DNS)
+    - 새 영역 마법사에서 보조 영역 선택, 영역 이름 `shkwon.local`, 마스터 서버 `10.0.0.21`, 역방향 영역도 같은 방식으로 생성
+    - `F5`(새로고침) 후 보조 서버에 레코드 복제 확인
+  - 확인: `w10`에서 `nslookup`(DNS 서버를 `10.0.0.21`, `10.0.0.22` 등으로 변경)으로 `shkwon.local`, `www`, `ftp` 질의, `ftp.shkwon.local` FTP 접속
+  - `C:\Windows\System32\dns`의 `shkwon.local.dns`를 메모장으로 열어 SOA, NS 레코드 확인(Linux 존 파일과 같은 구조)
+  - 복습 후 모든 VM을 스냅샷으로 초기 설정 복원
+
 ## 🎯 학습 목표
 
 - VMware 기반 가상화 실습 환경 구축
@@ -452,7 +536,9 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - LVM을 활용한 논리 볼륨 생성과 용량 확장
 - dnf, rpm, 소스 설치 방식 비교와 Linux DHCP 서버 구성
 - FTP 동작 방식 이해와 Linux·Windows FTP 서버 구성(Active·Passive 모드, 사용자 격리)
-- DNS 동작 원리 이해와 BIND 기반 정방향·역방향 DNS 서버 구성
+- DNS 동작 원리 이해와 BIND 기반 정방향·역방향, 주·보조 DNS 서버 구성
+- Windows 암호·계정 잠금 정책과 보안 옵션을 활용한 계정 보호
+- Windows IIS 웹 서버와 Windows DNS 서버(주·보조) 구성
 - 클라우드 환경의 취약점 이해와 보안 구축 능력 향상
 
 ## 🔗 참고 링크
