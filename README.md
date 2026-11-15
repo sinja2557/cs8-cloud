@@ -9,14 +9,14 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - **학습 기간:** 2026-11-02 ~ 2027-03-12
 - **교육 과정:** 경기인력개발원 Microsoft Cyber Security 8회차
 - **주요 학습 분야:** 클라우드 취약점, 시큐어 코딩, 클라우드 시스템 보안, 하이브리드 클라우드 보안 구축, Azure 클라우드 인프라, 데이터·앱 보안, 행위 기반 보안 탐지, 시스템 모의해킹
-- **주요 학습 도구:** VMware Workstation, Rocky Linux 9, Windows Server 2022, Windows 10·11, Xshell, FileZilla, IIS, BIND, Sysinternals(BGInfo)
+- **주요 학습 도구:** VMware Workstation, Rocky Linux 9, Windows Server 2022, Windows 10·11, Xshell, FileZilla, IIS, BIND, Sysinternals(BGInfo), GNS3, VirtualBox
 
 ## 🗂️ 학습 목차
 
 | 순서 | 학습 자료 | 주요 내용 |
 |---|---|---|
 | 1 | [12주차](./12주차/) | VMware 가상화 실습 환경 구축, Linux 기본 명령어, 사용자·그룹 관리, ACL, 압축·스토리지·LVM 관리, Windows Server 공유 권한 및 DHCP 구성 |
-| 2 | [13주차](./13주차/) | Linux 패키지 관리(dnf, rpm, 소스 설치), vi 편집기, Linux DHCP 서버 구성, FTP 서버 구성(Linux vsftpd, Windows IIS, Passive 모드, 사용자 격리), DNS 서버(BIND) 주·보조 구성, Windows 계정 정책·보안 옵션, Windows IIS 웹·DNS 서버 구성 |
+| 2 | [13주차](./13주차/) | Linux 패키지 관리(dnf, rpm, 소스 설치), vi 편집기, Linux DHCP 서버 구성, FTP 서버 구성(Linux vsftpd, Windows IIS, Passive 모드, 사용자 격리), DNS 서버(BIND) 주·보조 구성, Windows 계정 정책·보안 옵션, Windows IIS 웹·DNS 서버 구성, IIS 가상 호스트·접근 제어, Windows DNS 스텁 영역, GNS3 기반 라우터 실습 환경 구축 |
 
 > 각 폴더의 세부 학습 내용은 해당 폴더에서 확인할 수 있습니다. 실제 실습 기록은 아래 날짜별 학습 기록에서도 확인할 수 있습니다.
 
@@ -112,7 +112,19 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - Windows DNS 서버의 정방향·역방향 주 영역, 보조 영역, 영역 전송 허용 구성
 - Sysinternals(BGInfo, Autoruns, TCPView) 도구 확인
 
-### 15. 클라우드 보안 학습 확장
+### 15. IIS 가상 호스트와 접근 제어
+
+- 한 서버에서 여러 웹 사이트를 운영하는 3가지 방법(IP별, 포트별, 호스트 이름별 가상 호스트)
+- IP 주소 및 도메인 제한, 기본 인증으로 사이트별 접근 제어
+- HTTP 리디렉션, 기본 문서, 디렉터리 검색, 오류 페이지, 요청 필터링, HTTP 상태 코드와 메서드 이해
+- Windows DNS 보조 영역과 스텁 영역 비교
+
+### 16. 네트워크 장비와 GNS3 실습 환경
+
+- 라우터와 스위치의 역할 비교, Cisco IOS 라우터 기본 구성(호스트 이름, 인터페이스 IP, 기본 경로)
+- GNS3와 VirtualBox 기반 라우터·Linux 서버 연동 실습 환경 구축
+
+### 17. 클라우드 보안 학습 확장
 
 - 클라우드 취약점 및 시큐어 코딩
 - 클라우드 시스템 보안 및 하이브리드 클라우드 보안 구축
@@ -527,6 +539,66 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
   - `C:\Windows\System32\dns`의 `shkwon.local.dns`를 메모장으로 열어 SOA, NS 레코드 확인(Linux 존 파일과 같은 구조)
   - 복습 후 모든 VM을 스냅샷으로 초기 설정 복원
 
+### 2026-11-13 (63일차)
+
+- 1교시: 가상 호스트(Virtual Host) 개념과 구성 계획
+  - 여러 웹 사이트 운영 방법: IP별로 다른 페이지, 포트별로 다른 페이지, 동일한 IP와 포트를 사용하는 가상 호스트(DNS 필수)
+  - `blog`: IP 주소별 접근 제한(`w10`만 접속), `intra`: 내부 사용자(`a`, `b` 계정)만 접근 가능
+  - 서버별 역할 정리: `AD`는 DHCP·DNS·웹, `MEM1`은 DNS·웹·FTP, `MEM2`는 DNS·웹
+  - Cisco 장비 구조 개념 도식: Flash(IOS), CMOS, NVRAM(startup-config), RAM(running-config), 부팅 시 설정 불러오기 흐름
+  - FTP 폴더 구조 확인: `C:\01_FTP\LocalUser` 아래 `a`, `b`, `public`
+  - IIS 기능 복습(`W2K22-AD`, `shkwon_main` 사이트 대상)
+    - 기본 문서: `C:\11_MAIN`에 `babo.html` 추가 후 기본 문서 목록 맨 위에 등록
+    - HTTP 리디렉션: 요청을 `https://www.naver.com/`으로 리디렉션, 상태 코드 `302`(찾음)
+    - HTTP 응답 헤더, MIME 형식(`.mp4` → `video/mp4` 등), IP 주소 및 도메인 제한(`10.0.0.100`만 허용, 지정되지 않은 클라이언트는 거부)
+    - 디렉터리 검색: 시간, 크기, 확장명, 날짜 표시 옵션 설정, 사용 시 폴더 목록 노출(`10.0.0.21 - /1/`)
+    - 모듈, 압축(동적·정적 콘텐츠), 오류 페이지(`401` ~ `502`), 요청 필터링(HTTP 동사, 규칙, URL), 인증은 기능 위치와 역할 확인(모듈은 가급적 수정하지 않기)
+  - HTTP 상태 코드: `200`번대 정상, `300`번대 리디렉션, `400`번대 클라이언트 측 오류, `500`번대 서버 측 오류
+  - 주요 HTTP 메서드: `GET`(조회), `POST`(생성·제출), `PUT`(전체 교체), `PATCH`(일부 수정), `DELETE`(삭제), `HEAD`, `OPTIONS`, `TRACE`, `CONNECT`
+- 2교시: Windows DNS 서버 역할 분리
+  - `AD`는 주 DNS, `MEM1`은 보조 DNS(영역 전송을 `10.0.0.22`에 허용), `MEM2`는 스텁(Stub) 영역
+  - 스텁 영역: NS, SOA, 글루 호스트(A) 레코드만 복사하는 영역 유형(해당 영역에 대한 권한은 없음)
+  - `MEM2`에 정방향·역방향 모두 스텁 영역으로 생성(마스터 서버 `10.0.0.21`), 스텁 영역에는 레코드를 직접 추가하지 않음
+  - 레코드 생성 시 "연결된 PTR 레코드 업데이트"는 체크하지 않기
+  - `w10-1`의 DNS 서버를 `10.0.0.23`(`MEM2`)으로 지정 후 `nslookup`으로 `shkwon.local` 조회, 권한 없는 응답으로 `10.0.0.21` ~ `10.0.0.23` 확인
+- 3교시: IIS 가상 호스트 구성(호스트 이름 기반)
+  - 사이트 폴더 생성: `C:\11_MAIN`, `C:\12_BLOG`, `C:\13_INTRA`(각 `index.html` 작성)
+  - 페이지 문구: `AD`는 `SHKWON-W2K22-BLOG-1`, `MEM1`은 `BLOG-2`, `INTRA-2`, `MEM2`는 `INTRA-3`
+  - 사이트 `shkwon_blog`(경로 `C:\12_BLOG`, 포트 `80`, 호스트 이름 `blog.shkwon.local`), `shkwon_intra`(`C:\13_INTRA`, `intra.shkwon.local`) 추가
+    - `AD`, `MEM1`: `blog` / `MEM1`, `MEM2`: `intra`
+  - DNS 레코드 추가: `blog`(`10.0.0.21`, `10.0.0.22`), `intra`(`10.0.0.22`, `10.0.0.23`)
+  - `blog` 접근 제한: IP 주소 및 도메인 제한에서 `10.0.0.100`(`w10`)만 허용, 지정되지 않은 클라이언트는 거부
+    - `w10`은 접속 가능, `w11`은 접속 불가
+  - `intra` 접근 제한: 익명 인증 사용 안 함, 기본 인증 사용, 로컬 계정 `a`, `b` 생성
+    - Chrome에서 `intra.shkwon.local` 접속 시 로그인 창 출력, 인증 후 `SHKWON-W2K22-INTRA-3` 페이지 확인
+- 4교시: 팀원의 두 번째 서버에 도메인으로 접속하는 상호 점검
+- 5교시: GNS3 실습 환경 구축
+  - Cisco IOS 이미지(`c2691`, `c3745`)를 GNS3용 이미지 저장소에서 내려받아 준비
+  - GNS3 `2.2.61` 설치: 구성 요소는 GNS3 Desktop, WinPcap, Dynamips, QEMU, VPCS, Cpulimit 선택, Solarwinds 도구 체험은 `No`
+  - VirtualBox `7.2.22`와 Extension Pack 설치, 기본 머신 폴더 경로 수정
+  - 가상 머신 `rocky9-tem` 생성(Rocky Linux 9.8 minimal ISO), VMware와 다른 방식의 NAT 구조를 확인하고 네트워크를 NAT에서 "연결되지 않음"으로 변경
+  - GNS3 실행: 초기 마법사에서 로컬 컴퓨터 실행 선택, `Edit` → `Preferences` → `General` → `Console applications` 설정
+  - `Dynamips` → `IOS routers`에 `c2691` 새 템플릿 등록(WIC `WIC-2T`, Idle-PC finder로 Idle-PC 값 확인), `c3745`도 같은 방식으로 추가
+  - 프로젝트 `test` 생성
+- 6교시: 라우터 2대와 Linux 서버 연동 실습
+  - `rocky9-tem` 준비: `grubby --update-kernel ALL --args selinux=0` 실행 후 종료, 완전한 복제로 `rocky9-1`, `rocky9-2` 생성
+  - 토폴로지(`test` 프로젝트): `R1`(Seoul) ↔ `R2`(Busan) 시리얼 연결, 각 라우터 아래 `Switch`와 `VPCS`(`PC1`, `PC2`) 연결
+    - 서울 `10.0.0.0/24`(게이트웨이 `10.0.0.254`), 부산 `10.0.1.0/24`(게이트웨이 `10.0.1.254`), 라우터 간 `172.16.0.0/30`(`R1` `172.16.0.1`, `R2` `172.16.0.2`)
+  - VPCS 설정: `ip 10.0.0.1/24 10.0.0.254`, `ip 10.0.1.1/24 10.0.1.254`, `ip dns 168.126.63.1 8.8.8.8`, `save`, `show ip`로 확인
+  - 라우터 설정(`R1`, `R2` 공통 흐름)
+    - `hostname`을 `Seoul_R1`, `Busan_R1`로 지정, `interface f0/0`에서 `ip add`, `no sh`, `do wr`로 저장
+    - `interface s0/0`에 `172.16.0.1/30`, `172.16.0.2/30` 지정 후 `do ping`으로 라우터 간 통신 확인(성공률 100 percent)
+    - 기본 경로 `ip route 0.0.0.0 0.0.0.0 상대 라우터 주소` 설정
+  - `PC1`에서 `PC2`(`10.0.1.1`)로 `ping`: 초기 2회는 timeout 후 성공(`ttl=62`)하고, `PC2`에서 `PC1`으로도 성공
+  - 개념 정리
+    - 라우터: 서로 다른 네트워크의 통신을 연결, 라우팅 테이블 기반으로 패킷을 최적 경로로 전송
+    - 스위치: 동일한 네트워크에서 노드를 확장, MAC 주소 기반으로 전송
+  - GNS3에 VirtualBox VM 템플릿으로 `rocky9-1`, `rocky9-2` 등록 후 `test1` 프로젝트 생성
+  - `rocky9-1`: `nmtui`로 `10.0.0.1/24`, 게이트웨이 `10.0.0.254`, DNS `168.126.63.1`, `8.8.8.8` 설정 후 `ip a`, `hostnamectl` 확인
+  - `rocky9-2`: `10.0.1.1/24`, 게이트웨이 `10.0.1.254`로 같은 방식 구성
+  - `R2`의 `f0/1`에 클라우드(이더넷) 노드를 연결하는 외부 통신 구성 시작(다음 주 진행)
+- 7교시: 이번 주 학습 내용 정리
+
 ## 🎯 학습 목표
 
 - VMware 기반 가상화 실습 환경 구축
@@ -539,6 +611,8 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - DNS 동작 원리 이해와 BIND 기반 정방향·역방향, 주·보조 DNS 서버 구성
 - Windows 암호·계정 잠금 정책과 보안 옵션을 활용한 계정 보호
 - Windows IIS 웹 서버와 Windows DNS 서버(주·보조) 구성
+- IIS 가상 호스트와 접근 제어(IP 제한, 기본 인증) 구성
+- GNS3와 VirtualBox를 활용한 라우팅 실습 환경 구축과 서로 다른 네트워크 간 통신 확인
 - 클라우드 환경의 취약점 이해와 보안 구축 능력 향상
 
 ## 🔗 참고 링크
