@@ -9,7 +9,7 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - **학습 기간:** 2026-11-02 ~ 2027-03-12
 - **교육 과정:** 경기인력개발원 Microsoft Cyber Security 8회차
 - **주요 학습 분야:** 클라우드 취약점, 시큐어 코딩, 클라우드 시스템 보안, 하이브리드 클라우드 보안 구축, Azure 클라우드 인프라, 데이터·앱 보안, 행위 기반 보안 탐지, 시스템 모의해킹
-- **주요 학습 도구:** VMware Workstation, Rocky Linux 9, Windows Server 2022, Windows 10·11, Xshell, FileZilla, IIS, BIND, Sysinternals(BGInfo), GNS3, VirtualBox
+- **주요 학습 도구:** VMware Workstation, Rocky Linux 9, Windows Server 2022, Windows 10·11, Xshell, FileZilla, IIS, Apache httpd, BIND, Sysinternals(BGInfo), GNS3, VirtualBox
 
 ## 🗂️ 학습 목차
 
@@ -17,6 +17,7 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 |---|---|---|
 | 1 | [12주차](./12주차/) | VMware 가상화 실습 환경 구축, Linux 기본 명령어, 사용자·그룹 관리, ACL, 압축·스토리지·LVM 관리, Windows Server 공유 권한 및 DHCP 구성 |
 | 2 | [13주차](./13주차/) | Linux 패키지 관리(dnf, rpm, 소스 설치), vi 편집기, Linux DHCP 서버 구성, FTP 서버 구성(Linux vsftpd, Windows IIS, Passive 모드, 사용자 격리), DNS 서버(BIND) 주·보조 구성, Windows 계정 정책·보안 옵션, Windows IIS 웹·DNS 서버 구성, IIS 가상 호스트·접근 제어, Windows DNS 스텁 영역, GNS3 기반 라우터 실습 환경 구축 |
+| 3 | [14주차](./14주차/) | Linux 웹 서버(Apache httpd) 구성, `httpd.conf` 주요 설정, 호스트 이름 기반 가상 호스트, IP 기반 접근 제어, `.htaccess` 기본 인증, DNS·웹 서버 복습 |
 
 > 각 폴더의 세부 학습 내용은 해당 폴더에서 확인할 수 있습니다. 실제 실습 기록은 아래 날짜별 학습 기록에서도 확인할 수 있습니다.
 
@@ -124,7 +125,14 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - 라우터와 스위치의 역할 비교, Cisco IOS 라우터 기본 구성(호스트 이름, 인터페이스 IP, 기본 경로)
 - GNS3와 VirtualBox 기반 라우터·Linux 서버 연동 실습 환경 구축
 
-### 17. 클라우드 보안 학습 확장
+### 17. Linux 웹 서버(Apache)와 가상 호스트
+
+- `httpd` 설치와 `httpd.conf` 주요 설정 항목(서버 루트, 포트, 모듈, 사용자·그룹, 문서 루트, 로그) 이해
+- 호스트 이름 기반 가상 호스트(`VirtualHost`)로 한 서버에서 `www`, `blog`, `intra` 사이트 운영
+- `Order`·`Allow`·`Deny`를 이용한 IP 기반 접근 제어와 `.htaccess`·`htpasswd` 기반 기본 인증
+- DNS(BIND)와 웹 서버를 처음부터 다시 구성하는 반복 학습
+
+### 18. 클라우드 보안 학습 확장
 
 - 클라우드 취약점 및 시큐어 코딩
 - 클라우드 시스템 보안 및 하이브리드 클라우드 보안 구축
@@ -599,6 +607,84 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
   - `R2`의 `f0/1`에 클라우드(이더넷) 노드를 연결하는 외부 통신 구성 시작(다음 주 진행)
 - 7교시: 이번 주 학습 내용 정리
 
+### 2026-11-16 (64일차)
+
+> 14주차 시작. 주제: Linux 가상 호스트(Apache `httpd`)
+
+- 1교시: Linux DHCP 서버 구성(`rocky9-1`)
+  - `/etc/dhcp/dhcpd.conf` 작성: 범위 `10.0.0.31` ~ `10.0.0.250`, DNS `10.0.0.11`, `168.126.63.1`, 도메인 `shkwon.local`, 게이트웨이 `10.0.0.254`, 임대 시간 `7200`초
+  - `w10`, `w11`은 MAC 주소 기준으로 `10.0.0.101`, `10.0.0.201` 고정 할당
+  - `systemctl restart dhcpd`로 적용
+- 2교시: Linux 서버 3대 구성(`rocky9-1` ~ `rocky9-3`)
+  - `dnf history list`로 서버별 패키지 설치 이력 확인(`dhcp-server`, `bind`, `bind-utils`, `bind-libs`, `httpd`)
+  - FTP(`rocky9-2`, `vsftpd`)
+    - `/shkwon/ban`, `/shkwon/ch` 배너 파일 작성, `vsftpd.conf` 수정 후 `systemctl restart vsftpd`
+    - 사용자 `a`, `b` 생성, `dd`로 300M 파일(`/home/a/a.txt`, `/home/b/b.sh`) 생성
+    - 방화벽 `21/tcp`, `65000-65010/tcp` 허용
+  - 주 DNS(`rocky9-1`)
+    - `named.conf`: `listen-on port 53 { any; }`, `allow-query { any; }`
+    - `named.rfc1912.zones`: 정방향 존 `shkwon.local`(파일 `1`), 역방향 존 `0.0.10.in-addr.arpa`(파일 `2`) `type master`, `allow-update`에 `10.0.0.12`, `10.0.0.13` 지정
+    - `named.localhost`, `named.loopback`을 복사해 존 파일 작성, `chmod o+r` 부여
+    - 정방향 존: `NS`(`ns1` ~ `ns3`), `MX 10`, `@`와 `www`에 `10.0.0.11` ~ `10.0.0.13`, `ftp`, `CNAME`(`babo` → `ftp`), `ns1` ~ `ns3`, `mx1`
+    - 역방향 존: `PTR` 레코드 `11` ~ `13` → `ns1` ~ `ns3`
+    - 방화벽 `53/{tcp,udp}`, `80/tcp` 허용
+  - 보조 DNS(`rocky9-2`, `rocky9-3`)
+    - 존을 `type slave`, `masters { 10.0.0.11; }`로 구성 후 `systemctl start named`
+    - `/var/named/`에 존 파일 `1`, `2`가 자동 생성(소유자 `named`)되어 영역 전송 확인
+- 2교시 후반: Apache 설정 파일 분석(`vi /etc/httpd/conf/httpd.conf`, `rocky9-1`)
+  - 줄 번호별 주요 항목
+    - `34` 서버 루트, `47` 네트워크 카드(리슨 주소·포트), `61` 모듈
+    - `71`, `72` 실행 사용자·그룹, `91` 서버 관리자 메일 주소(`web@shkwon.local`)
+    - `107` 디렉토리 경로 기본 접근 거부, `124` 웹 콘텐츠 디렉토리, `129` `/var/www` 디렉토리(`blog`, `intra` 페이지)
+    - `136`(`149`, `156`) `/var/www/html` 디렉토리 옵션(`Options FollowSymLinks`, `AllowOverride None`, `Require all granted`), `168` 기본 문서(`DirectoryIndex`)
+    - `176` 파일 접근 제어, `187` 에러 로그(`logs/error_log`), `194` 로그 레벨(`debug`, `info`, `notice`, `warn`, `error`, `crit`)
+    - `201` 접속 클라이언트 정보(User-Agent) 로그, `222` 접속 로그(`combined`, `logs/access_log`)
+    - `252` `ScriptAlias`, `271` `TypesConfig`, `358` `IncludeOptional`(`conf.d/*.conf` 로드)
+- 3교시: 기본 웹 서버와 가상 호스트 구성
+  - `rocky9-1` ~ `rocky9-3` 공통: `httpd` 설치, `ServerAdmin` 변경, `DirectoryIndex`에 `babo.html` 추가, 사이트 폴더 `/var/www/html`, `/var/www/blog`, `/var/www/intra` 생성 후 각 `index.html` 작성
+  - `welcome.conf`를 `welcome.conf.bak`으로 이름 변경해 기본 테스트 페이지 비활성화(`index.html`이 없으면 `403 Forbidden` 출력), `index.html`을 `babo.html`로 바꿔 `DirectoryIndex` 우선순위 확인
+  - 메모: 데스크톱 환경에 Firefox 설치, User-Agent Switcher 확장 설치(`httpd.conf`의 User-Agent 로그 항목 실습 관련)
+  - 가상 호스트 설정(`httpd.conf` 맨 아래 또는 `conf.d/virtual.conf`)
+    - `NameVirtualHost *:80`, `<VirtualHost *:80>`마다 `ServerName`, `DocumentRoot` 지정
+    - `www.shkwon.local`(`ServerAlias shkwon.local`) → `/var/www/html`, `blog.shkwon.local` → `/var/www/blog`, `intra.shkwon.local` → `/var/www/intra`
+    - 설정 파일을 서버 3대에 같은 내용으로 적용(`vi` 명령 모드 `Ctrl + V`로 줄 번호 열 선택 삭제 활용)
+  - DNS에 `blog`(`10.0.0.11`, `10.0.0.12`), `intra`(`10.0.0.12`, `10.0.0.13`) `A` 레코드 추가, 서버 3대 모두 `systemctl restart httpd`
+  - 결과: `w10`, `w11`에서 `www.shkwon.local`, `blog.shkwon.local`, `intra.shkwon.local` 접속 시 서버별 페이지 출력
+    - `netstat -na -p tcp`로 클라이언트가 서버 3대(`10.0.0.11` ~ `10.0.0.13`)의 `80`번 포트에 연결된 상태 확인
+- 4교시: 복습을 위한 초기화
+  - DNS, `httpd`만 삭제: `dnf autoremove -y httpd bind bind-utils bind-libs`
+  - 설정 잔여 파일 삭제: `rm -rf /etc/named.conf.rpmsave /etc/named.rfc1912.zones.rpmsave /etc/httpd/ /var/www/ /var/named/`
+  - 방화벽 규칙 삭제: `80/tcp`, `53/{tcp,udp}` 제거 후 `firewall-cmd --reload`
+  - 재설치: `dnf install -y httpd bind bind-utils bind-libs`(3대 모두)
+- 5교시: DNS·`httpd` 복습(전체 재구성)
+  - `rocky9-1`: `named.conf`, `named.rfc1912.zones`, 존 파일 `1`·`2` 작성(시리얼 증가), `chmod o+r`, 방화벽 허용 후 `systemctl enable --now named httpd`
+  - `rocky9-2`, `rocky9-3`: 슬레이브 존 구성, `/var/www/{html,blog,intra}`와 `index.html` 작성, `welcome.conf` 비활성화
+  - `/etc/httpd/conf.d/virtual.conf`에 가상 호스트 작성 후 `systemctl enable --now httpd`
+- 6교시: 가상 호스트 접근 제어
+  - 목표: `blog`는 `w10`만 접속 가능, `intra`는 등록된 계정만 접속 가능
+  - IP 기반 접근 제어(`/etc/httpd/conf.d/virtual.conf`)
+    - `<Directory "/var/www/blog">` 안에 `Order deny,allow`, `Allow from 10.0.0.101`, `Deny from all` 지정
+    - `Order deny,allow`는 `Deny`를 먼저 평가한 뒤 `Allow`를 평가하므로 일치하는 `Allow`가 우선
+    - 주소는 `10.0.0` 또는 `10.0.0.0/255.255.255.0` 형식도 사용 가능
+  - 계정 기반 접근 제어
+    - `<Directory "/var/www/intra">`에 `AllowOverride AuthConfig` 지정
+    - `/var/www/intra/.htaccess`에 4줄 작성(반드시 기억할 항목)
+      - `AuthName "Test_Auth"`
+      - `AuthType Basic`(암호화 방식을 바꾸는 `Digest` 방식도 있음)
+      - `AuthUserFile /web/.auth`
+      - `Require user a b`
+    - `mkdir /web` 후 `htpasswd -c /web/.auth a`(`-c`는 파일을 처음 만들 때만), `htpasswd /web/.auth b` 실행
+    - `cat /web/.auth`에서 사용자별 암호가 해시(`$apr1$...`)로 저장된 것을 확인
+    - 서버 3대 모두 적용 후 `systemctl restart httpd`
+  - 결과
+    - `blog.shkwon.local`: `w10`에서는 정상 출력, `w11`에서는 `403 Forbidden`
+    - `intra.shkwon.local`: 접속 시 로그인 창 출력, `a`, `b` 계정으로 인증 후 페이지 출력
+- 7교시: 과제
+  - 팀원 도메인으로 접속하면 두 번째 서버(`rocky9-2`)로 접속되도록 구성
+  - `blog`는 IP 제한, `intra`는 팀원별 이니셜 계정을 생성해 로그인
+  - 결과 확인: `w10-1`에서 팀원 3명의 `blog` 도메인과 `blog.shkwon.local` 모두 `WEBSERVER-2` 페이지 출력
+    - `w11-1`에서는 `intra` 도메인마다 로그인 창이 뜨고 인증 후 페이지 출력, `blog`는 허용 IP가 아니면 `403 Forbidden`
+
 ## 🎯 학습 목표
 
 - VMware 기반 가상화 실습 환경 구축
@@ -613,6 +699,7 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - Windows IIS 웹 서버와 Windows DNS 서버(주·보조) 구성
 - IIS 가상 호스트와 접근 제어(IP 제한, 기본 인증) 구성
 - GNS3와 VirtualBox를 활용한 라우팅 실습 환경 구축과 서로 다른 네트워크 간 통신 확인
+- Apache 가상 호스트, IP 기반 접근 제어, 기본 인증을 활용한 Linux 웹 서버 구성
 - 클라우드 환경의 취약점 이해와 보안 구축 능력 향상
 
 ## 🔗 참고 링크
