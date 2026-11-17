@@ -9,7 +9,7 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - **학습 기간:** 2026-11-02 ~ 2027-03-12
 - **교육 과정:** 경기인력개발원 Microsoft Cyber Security 8회차
 - **주요 학습 분야:** 클라우드 취약점, 시큐어 코딩, 클라우드 시스템 보안, 하이브리드 클라우드 보안 구축, Azure 클라우드 인프라, 데이터·앱 보안, 행위 기반 보안 탐지, 시스템 모의해킹
-- **주요 학습 도구:** VMware Workstation, Rocky Linux 9, Windows Server 2022, Windows 10·11, Xshell, FileZilla, IIS, Apache httpd, BIND, Sysinternals(BGInfo), GNS3, VirtualBox
+- **주요 학습 도구:** VMware Workstation, Rocky Linux 9, Windows Server 2022, Windows 10·11, Xshell, FileZilla, IIS, Apache httpd, hMailServer, sendmail, Dovecot, Thunderbird, BIND, Sysinternals(BGInfo), GNS3, VirtualBox
 
 ## 🗂️ 학습 목차
 
@@ -17,7 +17,7 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 |---|---|---|
 | 1 | [12주차](./12주차/) | VMware 가상화 실습 환경 구축, Linux 기본 명령어, 사용자·그룹 관리, ACL, 압축·스토리지·LVM 관리, Windows Server 공유 권한 및 DHCP 구성 |
 | 2 | [13주차](./13주차/) | Linux 패키지 관리(dnf, rpm, 소스 설치), vi 편집기, Linux DHCP 서버 구성, FTP 서버 구성(Linux vsftpd, Windows IIS, Passive 모드, 사용자 격리), DNS 서버(BIND) 주·보조 구성, Windows 계정 정책·보안 옵션, Windows IIS 웹·DNS 서버 구성, IIS 가상 호스트·접근 제어, Windows DNS 스텁 영역, GNS3 기반 라우터 실습 환경 구축 |
-| 3 | [14주차](./14주차/) | Linux 웹 서버(Apache httpd) 구성, `httpd.conf` 주요 설정, 호스트 이름 기반 가상 호스트, IP 기반 접근 제어, `.htaccess` 기본 인증, DNS·웹 서버 복습 |
+| 3 | [14주차](./14주차/) | Linux 웹 서버(Apache httpd) 구성, `httpd.conf` 주요 설정, 호스트 이름 기반 가상 호스트, IP 기반 접근 제어, `.htaccess` 기본 인증, DNS·웹 서버 복습, 메일 서버(SMTP·POP3·IMAP) 개념과 구성(hMailServer, sendmail, Dovecot) |
 
 > 각 폴더의 세부 학습 내용은 해당 폴더에서 확인할 수 있습니다. 실제 실습 기록은 아래 날짜별 학습 기록에서도 확인할 수 있습니다.
 
@@ -132,7 +132,14 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - `Order`·`Allow`·`Deny`를 이용한 IP 기반 접근 제어와 `.htaccess`·`htpasswd` 기반 기본 인증
 - DNS(BIND)와 웹 서버를 처음부터 다시 구성하는 반복 학습
 
-### 18. 클라우드 보안 학습 확장
+### 18. 메일 서버(SMTP·POP3·IMAP)
+
+- 전자우편 서비스 개념(SMTP `25`, POP3 `110`, IMAP `143`, SSL 사용 시 `465`, `995`, `993`), MUA·MTA·MDA 동작 구조
+- Windows 메일 서버: hMailServer 설치, 도메인·계정 생성, 프로토콜·로그·Auto-ban 설정, Thunderbird 클라이언트 연동
+- Linux 메일 서버: `sendmail`(MTA)과 `dovecot`(POP3·IMAP) 구성, DNS `MX` 레코드 연동
+- 서버 초기화 후 같은 순서로 다시 구성하는 반복 학습
+
+### 19. 클라우드 보안 학습 확장
 
 - 클라우드 취약점 및 시큐어 코딩
 - 클라우드 시스템 보안 및 하이브리드 클라우드 보안 구축
@@ -685,6 +692,86 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
   - 결과 확인: `w10-1`에서 팀원 3명의 `blog` 도메인과 `blog.shkwon.local` 모두 `WEBSERVER-2` 페이지 출력
     - `w11-1`에서는 `intra` 도메인마다 로그인 창이 뜨고 인증 후 페이지 출력, `blog`는 허용 IP가 아니면 `403 Forbidden`
 
+### 2026-11-17 (65일차)
+
+> 주제: 메일 서버(Windows hMailServer, Linux sendmail·Dovecot)
+
+- 1교시: 전자우편 서비스 개념
+  - 프로토콜은 TCP 사용
+  - 포트
+    - 메일 송신: SMTP `25`(SSL 사용 시 `465`)
+    - 메일 수신: POP3 `110`(SSL 사용 시 `995`), IMAP `143`(SSL 사용 시 `993`)
+  - POP3: 메일 수신 시 클라이언트로 다운로드, 단말이 여러 대이면 메일 통합 작업 필요, 서버 사서함 용량 관리 불필요
+  - IMAP: 메일 수신 후에도 서버에 메일이 남음, 단말이 여러 대여도 통합 작업 불필요, 서버 사서함 용량 관리 필요
+  - SSL 사용 목적: 전송 데이터 암호화, 종단 간 신뢰성 확보(제3자 인증), 메모: 탈중앙화 블록체인
+  - 오늘 사용 도구: 서버 `hMailServer`(Windows), 클라이언트 `Thunderbird`(`w10`, `w11`)
+  - 서버 역할 확인: `W2K22-AD`는 DHCP·DNS·IIS, `W2K22-MEM1`은 DNS·IIS(+FTP), `W2K22-MEM2`는 DNS·IIS(+메일)
+    - IIS 사이트 폴더: `C:\11_MAIN`, `C:\12_BLOG`, `C:\13_INTRA`
+- 2교시: 메일 서버 준비(Windows)
+  - DNS 역할 조정: `W2K22-MEM1`을 주 DNS로, `W2K22-AD`와 `W2K22-MEM2`를 서브 DNS로 설정
+  - 메일 교환 레코드(`MX`) 추가: 메일 서버 FQDN `mx1.shkwon.local`, 우선 순위 `10`, 호스트 `mx1`은 `A` 레코드로 `W2K22-MEM2`(`10.0.0.23`) 등록
+  - `blog` 사이트 IP 제한 확인: `10.0.0.100`만 허용, 지정되지 않은 클라이언트는 거부(거부 동작 "찾을 수 없음")
+  - `W2K22-MEM1`, `W2K22-MEM2`에 사용자 `a`, `b` 생성
+  - `W2K22-MEM2`에 `hMailServer` 설치(관리 비밀번호 설정), 실행 후 `Connect`로 관리 화면 접속
+  - `w10`, `w11`에 `Thunderbird` 설치
+- 3교시: 메일 동작 구조와 hMailServer 구성
+  - 메일 동작 구조 용어
+    - `MUA`(Mail User Agent): 사용자가 메일을 쓰고 읽는 프로그램
+    - `MTA`(Mail Transfer Agent): 메일 서버끼리 메일을 전달하는 프로그램
+    - `MDA`(Mail Delivery Agent): 사용자 사서함에 메일을 전달하는 프로그램
+  - 메일 전달 흐름: `MUA` → `MTA`(SMTP `25`) → `MTA` → `MDA` → 사서함 → `MUA`(POP3·IMAP으로 수신)
+    - Linux 구성: `sendmail`(MTA) + `dovecot`(POP3·IMAP)
+  - hMailServer 설정
+    - `Domains` → `Add domain`: `shkwon.local`(Enabled)
+    - `Accounts` → `Add`: `a@shkwon.local`, `b@shkwon.local`(관리 수준 `User`)
+    - `Settings` → `Protocols`: SMTP, POP3, IMAP 사용
+    - `Logging`: Application, SMTP, POP3, IMAP, TCP/IP 로그 사용
+    - `Advanced` → `Auto-ban`: 잘못된 로그온 5회, 30분 후 초기화, 60분 차단
+      - 5회 오류 시 IP가 `IP Ranges`에 등록되어 접속이 막히므로, 사용하지 않을 때는 삭제
+  - 방화벽 인바운드 규칙: TCP 로컬 포트 `25, 110, 143` 허용
+  - Thunderbird 연동
+    - `w10`: `a@shkwon.local`, IMAP(포트 `143`), 보내는 서버 포트 `25`, 서버 주소는 `mx1.shkwon.local` 또는 메일 서버 IP(`10.0.0.23`) 모두 사용 가능
+    - `w11`: `b@shkwon.local`, POP3(포트 `110`), 보내는 서버 포트 `25`
+    - 설정 검토에서 인증 방법 "일반 비밀번호", 연결 보안 "없음" 확인(SSL 미사용)
+  - 메일 송수신 테스트: `w11`이 `a`, `b`에게 `mail test` 발송 → `w10`에서 수신 후 답장(`Re: mail test`) → `w11` 수신
+  - Thunderbird 계정을 삭제하고 `a`, `b` 계정을 IMAP과 POP3로 다시 연결해 수신 방식 비교(메일 서버 주소는 IP `10.0.0.23`으로 입력)
+  - 실습(점심시간까지): 팀원에게 메일 발송, 방화벽 열기, 포트 포워딩, DNS, 메일 계정 생성
+- 5교시: Linux 메일 서버(`rocky9-3`)
+  - 사전 준비: 모든 Rocky 서버의 DNS를 `10.0.0.11`로 변경, 사용자 `x`, `y` 생성
+    - `/etc/group`의 `mail` 그룹에 `x`, `y` 추가(`mail:x:12:x,y`)
+    - 패키지 설치: `dnf install -y sendmail sendmail-cf dovecot`
+  - `sendmail` 구성(관련 파일: `access`, `sendmail.cf`, `sendmail.mc`, `local-host-names`)
+    - `/etc/mail/sendmail.mc` 수정(`dnl`은 주석 표시이므로 지우면 활성화)
+      - `21`번 줄: 로그 레벨 `confLOG_LEVEL` `14`
+      - `56`, `57`번 줄: 인증 방식 `TRUST_AUTH_MECH`, `confAUTH_MECHANISMS` 활성화
+      - `121`번 줄: `DAEMON_OPTIONS(`Port=smtp, Name=MTA')`(`Addr=127.0.0.1` 제한 제거로 외부 수신 허용)
+    - `m4 /etc/mail/sendmail.mc > /etc/mail/sendmail.cf`로 설정 파일 생성(`sendmail.cf` 직접 수정은 `Cwlocalhost`, `Fw/etc/mail/local-host-names` 확인 정도)
+    - `/etc/mail/local-host-names`: `mx1.shkwon.local`, `shkwon.local` 등록
+    - `/etc/mail/access`: `localhost`, `127.0.0.1`, `mx1.shkwon.local`, `10.0.0`, `10.0.0.0/255.255.255.0`, `shkwon.local`에 `RELAY` 허용
+    - `makemap hash /etc/mail/access < /etc/mail/access`로 `access.db` 생성
+    - `systemctl enable --now sendmail` 후 `systemctl status sendmail`로 `active (running)` 확인
+  - `dovecot` 구성(관련 파일: `10-auth`, `mail`, `master`, `ssl`)
+    - `/etc/dovecot/dovecot.conf`: `protocols = imap pop3 lmtp submission`, `listen = *, ::`
+    - `conf.d/10-auth.conf`: `disable_plaintext_auth = no`
+    - `conf.d/10-ssl.conf`: `ssl = no`
+    - `conf.d/10-mail.conf`: `mail_location = mbox:~/mail:INBOX=/var/mail/%u`
+    - `conf.d/10-master.conf`: `pop3-login`의 `port = 110`, `imap-login`의 `port = 143` 활성화
+    - `systemctl enable --now dovecot`, 방화벽 `firewall-cmd --permanent --add-port={25,110,143}/tcp` 후 `--reload`
+  - Thunderbird 연동(보안 예외 확인 필요)
+    - `w10`: `x@shkwon.local`, IMAP, 서버 `10.0.0.13`, 보내는 서버 `10.0.0.13`
+    - `w11`: `y@shkwon.local`, POP3, 서버 `10.0.0.13`
+    - 인증서 오류 창에서 보안 예외 추가 후 계정 설정 완료
+  - 송수신 테스트: `x` → `y`로 `test_x` 발송, `y`가 `Re: test_y`로 답장
+- 6교시: 복습(전체 재구성)
+  - `w10`, `w11`의 Thunderbird 계정 삭제, `rocky9-1`, `rocky9-3` 스냅샷 초기화
+  - `rocky9-1`: DHCP, DNS / `rocky9-3`: DNS, 메일(`sendmail`), `dovecot`
+  - `rocky9-1`: DHCP 설정, 서비스 enable → DNS 설정, 서비스 enable
+  - `rocky9-3`: 사용자 `aa`, `bb` 생성과 `mail` 그룹 추가 → 패키지 설치 → DNS 설정, 방화벽 허용, 서비스 enable → `sendmail.mc` 편집, `m4`로 `sendmail.cf` 생성, `local-host-names`, `access` 편집, `makemap hash` → 방화벽 허용, 서비스 enable → `dovecot.conf`, `10-auth`, `10-ssl`, `10-mail`, `10-master` 편집, 서비스 enable
+  - 보충: `cat > 1.txt << eof` 형식의 here document로 여러 줄 파일 작성 연습
+  - 메일 구성도 정리: 도메인마다 `NS`(DNS)가 있고, 메일 서버끼리 SMTP로 전달하며, 수신 사용자(`babo@babo.local`)는 자기 도메인의 메일 서버에서 메일 수신
+- 7교시: 과제
+  - 팀원에게 메일 보내기
+
 ## 🎯 학습 목표
 
 - VMware 기반 가상화 실습 환경 구축
@@ -700,6 +787,7 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - IIS 가상 호스트와 접근 제어(IP 제한, 기본 인증) 구성
 - GNS3와 VirtualBox를 활용한 라우팅 실습 환경 구축과 서로 다른 네트워크 간 통신 확인
 - Apache 가상 호스트, IP 기반 접근 제어, 기본 인증을 활용한 Linux 웹 서버 구성
+- SMTP·POP3·IMAP 동작 원리 이해와 Windows(hMailServer)·Linux(sendmail, Dovecot) 메일 서버 구성
 - 클라우드 환경의 취약점 이해와 보안 구축 능력 향상
 
 ## 🔗 참고 링크
