@@ -9,7 +9,7 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - **학습 기간:** 2026-11-02 ~ 2027-03-12
 - **교육 과정:** 경기인력개발원 Microsoft Cyber Security 8회차
 - **주요 학습 분야:** 클라우드 취약점, 시큐어 코딩, 클라우드 시스템 보안, 하이브리드 클라우드 보안 구축, Azure 클라우드 인프라, 데이터·앱 보안, 행위 기반 보안 탐지, 시스템 모의해킹
-- **주요 학습 도구:** VMware Workstation, Rocky Linux 9, Windows Server 2022, Windows 10·11, Xshell, FileZilla, IIS, Apache httpd, hMailServer, sendmail, Dovecot, Thunderbird, BIND, Sysinternals(BGInfo), GNS3, VirtualBox
+- **주요 학습 도구:** VMware Workstation, Rocky Linux 9, Windows Server 2022, Windows 10·11, Xshell, FileZilla, IIS, Apache httpd, hMailServer, sendmail, Dovecot, Thunderbird, NFS, PHP, PHP Manager for IIS, MySQL, WordPress, BIND, Sysinternals(BGInfo), GNS3, VirtualBox
 
 ## 🗂️ 학습 목차
 
@@ -17,7 +17,7 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 |---|---|---|
 | 1 | [12주차](./12주차/) | VMware 가상화 실습 환경 구축, Linux 기본 명령어, 사용자·그룹 관리, ACL, 압축·스토리지·LVM 관리, Windows Server 공유 권한 및 DHCP 구성 |
 | 2 | [13주차](./13주차/) | Linux 패키지 관리(dnf, rpm, 소스 설치), vi 편집기, Linux DHCP 서버 구성, FTP 서버 구성(Linux vsftpd, Windows IIS, Passive 모드, 사용자 격리), DNS 서버(BIND) 주·보조 구성, Windows 계정 정책·보안 옵션, Windows IIS 웹·DNS 서버 구성, IIS 가상 호스트·접근 제어, Windows DNS 스텁 영역, GNS3 기반 라우터 실습 환경 구축 |
-| 3 | [14주차](./14주차/) | Linux 웹 서버(Apache httpd) 구성, `httpd.conf` 주요 설정, 호스트 이름 기반 가상 호스트, IP 기반 접근 제어, `.htaccess` 기본 인증, DNS·웹 서버 복습, 메일 서버(SMTP·POP3·IMAP) 개념과 구성(hMailServer, sendmail, Dovecot) |
+| 3 | [14주차](./14주차/) | Linux 웹 서버(Apache httpd) 구성, `httpd.conf` 주요 설정, 호스트 이름 기반 가상 호스트, IP 기반 접근 제어, `.htaccess` 기본 인증, DNS·웹 서버 복습, 메일 서버(SMTP·POP3·IMAP) 개념과 구성(hMailServer, sendmail, Dovecot), Linux NFS 서버와 Linux·Windows 클라이언트 구성, Windows IIS 기반 WordPress·MySQL 구성 |
 
 > 각 폴더의 세부 학습 내용은 해당 폴더에서 확인할 수 있습니다. 실제 실습 기록은 아래 날짜별 학습 기록에서도 확인할 수 있습니다.
 
@@ -139,7 +139,19 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - Linux 메일 서버: `sendmail`(MTA)과 `dovecot`(POP3·IMAP) 구성, DNS `MX` 레코드 연동
 - 서버 초기화 후 같은 순서로 다시 구성하는 반복 학습
 
-### 19. 클라우드 보안 학습 확장
+### 19. NFS 파일 공유
+
+- NFS(Network File System) 개념: 파일 시스템을 네트워크로 공유, 사용 포트 `111`, `2049`, `20048`
+- Linux NFS 서버(`/etc/exports`, `exportfs`, `nfs-server`)와 Linux·Windows 클라이언트 마운트
+- 방화벽 서비스(`rpc-bind`, `nfs`, `mountd`) 허용과 공유 디렉토리 쓰기 권한 확인
+
+### 20. WordPress와 MySQL 웹 서비스
+
+- Windows IIS에 PHP, PHP Manager for IIS를 설치해 PHP 실행 환경 구성
+- 별도 서버에 MySQL을 설치하고 WordPress 전용 데이터베이스와 사용자 생성
+- `wp-config.php`로 웹 서버와 DB 서버 연결 후 WordPress 설치
+
+### 21. 클라우드 보안 학습 확장
 
 - 클라우드 취약점 및 시큐어 코딩
 - 클라우드 시스템 보안 및 하이브리드 클라우드 보안 구축
@@ -772,6 +784,90 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - 7교시: 과제
   - 팀원에게 메일 보내기
 
+### 2026-11-18 (66일차)
+
+> 주제: 구성 속도 복습과 Linux NFS
+
+- 1교시: 시간 제한 복습
+  - 25분 이내에 DHCP, FTP 구성(`09:22` 시작, `09:29` 테스트와 구성 완료)
+  - 완료 후 각 서버의 DNS 주소를 Linux 서버의 1차 DNS 주소로 변경, `nmcli dev show`로 `IP4.DNS` 확인
+  - `rocky9-3`: DNS 구성(`ns3`)과 방화벽 허용
+- 2, 3교시: 가상 호스트와 웹 서버 구성
+  - `rocky9-1`, `rocky9-2`: 보조 DNS 설정
+  - 모든 Linux 서버에 웹 서버를 설정하고, 팀원별 영역(도메인) 생성
+- 4교시: Linux NFS
+  - NFS(Network File System): 파일 시스템을 네트워크로 공유하는 방식
+    - 공유 대상 디렉토리가 존재하는 파일 시스템 전체를 사용하는 개념으로 정리(서버 디렉토리를 클라이언트 디렉토리에 마운트하면 서버 용량 사용)
+  - 사용 포트 3개: `111`(`rpc-bind`), `2049`(`nfs`), `20048`(`mountd`), 방화벽에서는 서비스 단위로 개방
+  - 서버 `rocky9-1`, 클라이언트 `rocky9-3`
+  - 서버 구성(`rocky9-1`)
+    - `dnf install -y nfs-utils`, 공유 디렉토리 `/nfs-s` 생성
+    - `/etc/exports`: `/nfs-s 10.0.0.0/24(rw,sync,no_root_squash)`
+      - `rw` 읽기·쓰기, `sync` 동기화, `no_root_squash` 접속자의 `root` 권한 유지(옵션이 없으면 익명 사용자로 변환, `all_squash`도 있음)
+    - `systemctl enable --now nfs-server`, `exportfs -v`로 공유 옵션 확인(`exportfs: can't open /var/lib/nfs/etab` 오류는 서비스 시작 후 해소)
+    - `rpcinfo -p`로 `portmapper`(`111`), `mountd`(`20048`), `nfs`(`2049`), `nlockmgr` 등록 확인, `ss -nat`으로 `111`, `2049`, `20048` LISTEN 확인
+    - 방화벽: `firewall-cmd --permanent --add-service={rpc-bind,nfs,mountd}` 후 `--reload`
+    - `/etc/nfsmount.conf`에서 마운트 기본 설정 확인
+  - 클라이언트 구성(`rocky9-3`)
+    - `dnf install -y nfs-utils`, 마운트 지점 `/nfs-c` 생성
+    - `mount -t nfs 10.0.0.11:/nfs-s /nfs-c`, `df -Th`에서 파일 시스템 유형 `nfs4`와 서버 공유 용량 확인
+    - `cat > /nfs-c/nfstest.txt`로 작성한 파일이 서버 `/nfs-s/nfstest.txt`에서도 같은 내용으로 조회
+  - 권한 확인
+    - 공유 디렉토리 권한이 `drwxr-xr-x`이면 클라이언트에서 파일 생성 불가
+    - `chmod o+w /nfs-s` 적용 후 클라이언트에서 파일(`rocky9-2.txt` 등)과 디렉토리 생성 가능, 생성자는 익명 사용자 ID(`4294967294`)로 표시
+  - Windows 클라이언트(`w10`, `w11`)
+    - 제어판 → Windows 기능 켜기/끄기 → NFS용 서비스 → NFS용 클라이언트, 관리 도구 설치
+    - `mount -o anon 10.0.0.11:/nfs-s z:`로 `Z:` 드라이브 연결, 내 PC에 `nfs-s` 표시
+    - 쓰기 권한 적용 전에는 폴더 생성 불가, 적용 후 폴더(`babo`) 생성 가능
+- 5 ~ 7교시: 체계 구성표 기준 전체 구성
+  - 구성표 기준: `rocky9-1`(`10.0.0.11`), `rocky9-2`(`10.0.0.12`), `rocky9-3`(`10.0.0.13`), `w10`(`10.0.0.101`), `w11`(`10.0.0.201`), 서브넷 마스크 `255.255.255.0`, 게이트웨이 `10.0.0.254`, 주 DNS와 외부 DNS `168.126.63.1`
+  - 역할: DHCP, 주·보조 DNS, 웹(`intra`, `main`, `blog`), FTP(passive, 데이터 전송 포트 `61000-61010`, 사용자 `a`, `b`만 접근), NFS 서버·클라이언트, 메일
+  - 접근 제어 조건: `blog`는 IP 제한으로 `w11`만 접근 가능(그 외 `403` 오류 메시지), 메일은 팀원 이니셜 계정으로 상호 발송
+
+### 2026-11-19 (67일차)
+
+> 주제: 전체 구성 복습, Windows 메일 서버, WordPress와 MySQL
+
+- 1 ~ 2교시: 체계 구성표 기준 서버 구성
+  - 구성표 변경 사항: `W2K22-AD`(`10.0.0.21`)를 DHCP(지연 시간 `100`ms), FTP(passive), 주 DNS, 웹(`main`, `intra`), 메일 서버로 지정
+    - `W2K22-AD`는 팀원 모두 웹 접속이 가능하도록 설정, FTP 서버는 팀원 간 접속 가능(데이터 전송 포트 허용 불필요)
+  - 패키지 설치
+    - `rocky9-1`: `dnf install -y dhcp-server bind bind-utils bind-libs httpd nfs-utils`
+    - `rocky9-3`: `dnf install -y bind bind-utils bind-libs httpd nfs-utils`
+    - `W2K22-AD`: 서버 관리자에서 DNS 서버, 웹 서버(IIS, FTP 서비스 포함), NFS용 클라이언트 설치
+      - 웹 서버 역할 서비스: 기본 문서, 디렉터리 검색, HTTP 오류, HTTP 리디렉션, 정적 콘텐츠, HTTP 로깅, 로깅 도구, 동적·정적 콘텐츠 압축, 기본 인증, 요청 필터링, IP 및 도메인 제한, Windows 인증, `.NET Framework 4.8`, `ASP.NET 4.8`
+  - DHCP 구성(`rocky9-1`): 범위 `10.0.0.31` ~ `10.0.0.250`, DNS `10.0.0.21`, `168.126.63.1`, 도메인 `shkwon.local`, 게이트웨이 `10.0.0.254`, 임대 시간 `7200`초, `w10`, `w11`은 MAC 주소 기준으로 `10.0.0.101`, `10.0.0.201` 고정
+  - DNS 구성: `rocky9-1`은 마스터, `rocky9-2`와 `W2K22-AD`는 슬레이브
+  - `httpd` 설정과 NFS 설정
+    - `rocky9-1`: `systemctl restart httpd`, `/nfs-s` 생성, `/etc/exports`에 `10.0.0.0/24` 공유(`sync`, `rw`, `no_root_squash` 등), `systemctl enable --now nfs-server`, `exportfs -v` 확인
+    - 방화벽 서비스(`mountd`, `nfs`, `rpc-bind`)와 포트 `53/tcp`, `53/udp`, `80/tcp` 허용 확인(`firewall-cmd --list-all`)
+    - `rocky9-3`: `mount -t nfs 10.0.0.11:/nfs-s /nfs-c`, `df -Th`에서 `nfs4` 마운트 확인
+  - 메일 계정 `a` 생성에 실패하면 메일 서버의 `IP Ranges`에서 차단(ban) 여부 확인
+- 3, 4교시: `W2K22-AD` 메일 서버 설정
+  - NAT 설정 변경, Linux 서버의 주 DNS 변경
+- 5교시: 3, 4교시 구성을 완성하지 못한 팀원 지원
+- 6교시: WordPress와 MySQL
+  - 구성 목표: `W2K22` 서버를 활용한 WordPress 구성, 시작 전 `W2K22-MEM1`, `W2K22-MEM2` 스냅샷 초기화
+    - `W2K22-MEM1`: IIS(CGI) + PHP + PHP Manager for IIS + WordPress
+    - `W2K22-MEM2`: MySQL(Windows)
+    - 호스트 PC: 테스트 접속
+  - 사용 자료: PHP `8.5.12`(VS17 x64 Non Thread Safe), PHP Manager for IIS `1.5.0`, MySQL Installer `8.0.46`, WordPress `7.1.5`(한국어)
+  - IIS와 PHP 구성(`W2K22-MEM1`)
+    - PHP 설치 전에 IIS 먼저 설치, 역할 서비스에서 `CGI` 선택
+    - 기능 설치 중 원본 파일 경로를 요구하면 설치 미디어 경로(`d:\sources\sxs\`)로 바꿔서 진행
+    - PHP 압축 해제 경로 `C:\php`, 환경 변수 `Path`에 `C:\php` 추가, `php --version`으로 `PHP 8.5.12` 확인
+    - `PHPManagerForIIS_V1.5.0.msi` 설치 후 IIS 관리자의 PHP Manager에서 "PHP is not enabled" 확인 → `Register new PHP version`으로 `C:\php\php-cgi.exe` 등록
+    - WordPress 압축 해제 경로 `C:\wordpress`, 웹 사이트 `shkwon_word` 추가, 기본 문서에 `index.php` 등록
+  - MySQL 구성(`W2K22-MEM2`)
+    - MySQL Installer에서 `Server only`, Config Type `Development Computer`, TCP/IP 포트 `3306`, X Protocol 포트 `33060`, Windows 방화벽 포트 열기 선택
+    - `root` 계정 암호 설정, 사용자 `shkwon`(Host `All Hosts(%)`, Role `DB Admin`) 생성
+    - MySQL 8.0 Command Line Client에서 `create database word;`, `show databases;`로 데이터베이스 생성 확인, `select user,host from mysql.user;`로 `shkwon`의 `%` 접속 허용 확인
+  - WordPress 연결
+    - `wp-config-sample.php`를 복사해 `wp-config.php` 작성: `DB_NAME` `word`, `DB_USER` `shkwon`, `DB_HOST`는 MySQL 서버(`W2K22-MEM2`)의 IP
+    - DB 준비 전 접속하면 "데이터베이스 연결 중 오류" 화면 출력
+    - DB 준비 후 `http://10.0.0.22/wp-admin/install.php`에서 사이트 제목, 사용자명, 관리자 정보를 입력해 설치, "성공! 워드프레스가 설치되었습니다" 확인
+- 7교시: 6교시 내용 복습(WordPress와 MySQL 재구성)
+
 ## 🎯 학습 목표
 
 - VMware 기반 가상화 실습 환경 구축
@@ -788,6 +884,8 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - GNS3와 VirtualBox를 활용한 라우팅 실습 환경 구축과 서로 다른 네트워크 간 통신 확인
 - Apache 가상 호스트, IP 기반 접근 제어, 기본 인증을 활용한 Linux 웹 서버 구성
 - SMTP·POP3·IMAP 동작 원리 이해와 Windows(hMailServer)·Linux(sendmail, Dovecot) 메일 서버 구성
+- NFS 서버·클라이언트 구성을 통한 네트워크 파일 공유 이해
+- IIS(PHP)와 MySQL을 분리한 WordPress 3계층 구성
 - 클라우드 환경의 취약점 이해와 보안 구축 능력 향상
 
 ## 🔗 참고 링크
