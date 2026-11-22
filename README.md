@@ -9,7 +9,7 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - **학습 기간:** 2026-11-02 ~ 2027-03-12
 - **교육 과정:** 경기인력개발원 Microsoft Cyber Security 8회차
 - **주요 학습 분야:** 클라우드 취약점, 시큐어 코딩, 클라우드 시스템 보안, 하이브리드 클라우드 보안 구축, Azure 클라우드 인프라, 데이터·앱 보안, 행위 기반 보안 탐지, 시스템 모의해킹
-- **주요 학습 도구:** VMware Workstation, Rocky Linux 9, Windows Server 2022, Windows 10·11, Xshell, FileZilla, IIS, Apache httpd, hMailServer, sendmail, Dovecot, Thunderbird, NFS, PHP, PHP Manager for IIS, MySQL, WordPress, BIND, Sysinternals(BGInfo), GNS3, VirtualBox
+- **주요 학습 도구:** VMware Workstation, Rocky Linux 9, Windows Server 2022, Windows 10·11, Xshell, FileZilla, IIS, Apache httpd, hMailServer, sendmail, Dovecot, Thunderbird, NFS, PHP, PHP Manager for IIS, MySQL, WordPress, ARR, URL Rewrite, BIND, Sysinternals(BGInfo), GNS3, VirtualBox
 
 ## 🗂️ 학습 목차
 
@@ -17,7 +17,7 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 |---|---|---|
 | 1 | [12주차](./12주차/) | VMware 가상화 실습 환경 구축, Linux 기본 명령어, 사용자·그룹 관리, ACL, 압축·스토리지·LVM 관리, Windows Server 공유 권한 및 DHCP 구성 |
 | 2 | [13주차](./13주차/) | Linux 패키지 관리(dnf, rpm, 소스 설치), vi 편집기, Linux DHCP 서버 구성, FTP 서버 구성(Linux vsftpd, Windows IIS, Passive 모드, 사용자 격리), DNS 서버(BIND) 주·보조 구성, Windows 계정 정책·보안 옵션, Windows IIS 웹·DNS 서버 구성, IIS 가상 호스트·접근 제어, Windows DNS 스텁 영역, GNS3 기반 라우터 실습 환경 구축 |
-| 3 | [14주차](./14주차/) | Linux 웹 서버(Apache httpd) 구성, `httpd.conf` 주요 설정, 호스트 이름 기반 가상 호스트, IP 기반 접근 제어, `.htaccess` 기본 인증, DNS·웹 서버 복습, 메일 서버(SMTP·POP3·IMAP) 개념과 구성(hMailServer, sendmail, Dovecot), Linux NFS 서버와 Linux·Windows 클라이언트 구성, Windows IIS 기반 WordPress·MySQL 구성 |
+| 3 | [14주차](./14주차/) | Linux 웹 서버(Apache httpd) 구성, `httpd.conf` 주요 설정, 호스트 이름 기반 가상 호스트, IP 기반 접근 제어, `.htaccess` 기본 인증, DNS·웹 서버 복습, 메일 서버(SMTP·POP3·IMAP) 개념과 구성(hMailServer, sendmail, Dovecot), Linux NFS 서버와 Linux·Windows 클라이언트 구성, Windows IIS 기반 WordPress·MySQL 구성, Linux·Windows 3 Tier(Web·WAS·DB) 웹 서비스 구축(ARR, URL Rewrite), GNS3 라우터 NAT 구성 |
 
 > 각 폴더의 세부 학습 내용은 해당 폴더에서 확인할 수 있습니다. 실제 실습 기록은 아래 날짜별 학습 기록에서도 확인할 수 있습니다.
 
@@ -151,7 +151,14 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - 별도 서버에 MySQL을 설치하고 WordPress 전용 데이터베이스와 사용자 생성
 - `wp-config.php`로 웹 서버와 DB 서버 연결 후 WordPress 설치
 
-### 21. 클라우드 보안 학습 확장
+### 21. 3 Tier 웹 서비스 구축
+
+- 1·2·3 Tier 구조 비교(Web 정적 페이지, WAS 동적 페이지, DB)와 로드 밸런서, DB 읽기 전용 서버(replica) 개념
+- Linux: `rocky9-1` WAS(`httpd`, `php`), `rocky9-3` DB(`mysql-server`)로 WordPress 분리 구성, `sed`·셸 스크립트로 설치 자동화
+- Windows: IIS ARR(Application Request Routing)과 URL Rewrite로 Web 서버가 요청을 WAS로 전달하는 역방향 프록시 구성
+- `access_log` 실시간 확인으로 요청 흐름 검증, 3 Tier 구축 보고서 작성
+
+### 22. 클라우드 보안 학습 확장
 
 - 클라우드 취약점 및 시큐어 코딩
 - 클라우드 시스템 보안 및 하이브리드 클라우드 보안 구축
@@ -868,6 +875,77 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
     - DB 준비 후 `http://10.0.0.22/wp-admin/install.php`에서 사이트 제목, 사용자명, 관리자 정보를 입력해 설치, "성공! 워드프레스가 설치되었습니다" 확인
 - 7교시: 6교시 내용 복습(WordPress와 MySQL 재구성)
 
+### 2026-11-20 (68일차)
+
+> 14주차 마지막 날. 주제: 3 Tier 구조와 WordPress 구성, 주말 숙제(3 Tier 구성과 보고서)
+
+- 1교시: Tier 구조 개념
+  - 1Tier: `web`, `was`, `db`를 한 서버에서 운영
+  - 2Tier: `web`과 `was`(IIS, PHP 등)를 한 서버에, `db`(MySQL)를 별도 서버에 운영
+  - 3Tier: 역할별 서버 분리
+    - `WEB`: 정적 페이지(`apache`, `nginx`, `IIS`)
+    - `WAS`: 동적 페이지(`tomcat`, `php`, `jboss`)
+    - `DB`: `MySQL`, `MariaDB`, `Oracle`
+  - 관련 용어: Web Application Service, 로드 밸런서(Front End, Back End), DB 읽기 전용 서버(replica), IIS의 `Application Request Routing`·`URL Rewrite`
+  - DB 서버 사전 확인: `create database word;`, `select user,host from mysql.user;`로 `word` 데이터베이스와 `shkwon`(Host `%`) 사용자 확인, `netstat -na -p tcp`로 `3306` LISTEN 확인
+- 2교시: Windows WordPress와 PHP 구성(`W2K22-AD`)
+  - 서버 관리자에서 웹 서버 IIS(+CGI) 설치, `.NET Framework 3.5`는 대체 경로 `d:\sources\sxs` 지정
+  - `C:\`에 `php`, `wordpress` 폴더 복사(붙여넣기 전에 압축 해제 후 폴더 이름 변경)
+  - 환경 변수 `Path`에 `C:\php` 추가 후 `php --version`으로 확인(PHP Manager 설치 후 IIS에 항목 표시)
+  - 기존 웹 사이트 삭제 후 `shkwon_word` 사이트 생성, 기본 문서에서 `index.php`를 맨 위로 이동
+  - `10.0.0.21` 접속(Host PC에서도 가능), `wp-config-sample.php`를 복사해 `wp-config.php`로 이름 변경 후 `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_HOST`(`10.0.0.22`) 변경
+  - `10.0.0.21` 재접속 후 사이트 정보 입력과 설치
+- 2교시 후반: Linux WordPress와 MySQL
+  - DB 서버(`rocky9-2`)
+    - `dnf install -y mysql-server`, `systemctl enable --now mysqld`, `mysql -uroot`로 접속
+    - 사용자 생성: `create user 'shkwon'@'%' identified by ...;`(`identified`를 `indentified`로 잘못 입력하면 `ERROR 1064` 발생), `grant all privileges on *.* to 'shkwon'@'%';`(`*.*`은 모든 데이터베이스의 모든 테이블), `create database word;`
+    - 방화벽: `firewall-cmd --permanent --add-port=3306/tcp` 후 `--reload`
+  - WAS 서버(`rocky9-1`)
+    - `dnf install -y mysql`, `mysql -ushkwon -p -h 10.0.0.12`로 DB 서버 접속 확인(Windows DB 서버도 같은 방식으로 접속)
+    - `dnf install -y wget`, `wget`으로 WordPress `7.1.5` 한국어판 `tar.gz` 내려받아 `tar xvfz`로 압축 해제(`tar`도 함께 설치)
+    - `dnf install -y httpd php php-mysqlnd`
+    - `cp -ar wordpress/* /var/www/html/`로 파일 복사
+    - `/etc/httpd/conf/httpd.conf`의 `DirectoryIndex`(`168`행)를 `index.php index.html`로 변경
+    - 방화벽 `80/tcp` 허용, `systemctl enable --now httpd`
+    - `wp-config-sample.php`를 `wp-config.php`로 복사 후 `DB_HOST`를 DB 서버 주소(`10.0.0.12`)로 지정
+- 3교시: 스냅샷 초기화 후 재구성과 스크립트화
+  - `rocky9-1`, `rocky9-2`, `rocky9-3` 스냅샷 초기화, DB 서버를 `rocky9-3`(`10.0.0.13`)으로 변경해 같은 순서로 재구성
+  - `rocky9-3`에서 `mysql-server` 설치, `3306/tcp` 허용, 사용자·권한·`word` 데이터베이스 생성, `10.0.0.13`으로 접속 확인
+  - `sed -i`: 원본 파일까지 함께 수정하는 옵션
+  - WAS 구성 스크립트(`word.sh`, `rocky9-1`)
+    - 패키지 설치, WordPress 다운로드·압축 해제·복사, `sed -i`로 `httpd.conf`의 `DirectoryIndex` 수정, `wp-config.php`의 `database_name_here`, `username_here`, `password_here`, `localhost`를 DB 값으로 치환, 방화벽 허용, `httpd` 시작
+    - `sh word.sh`로 실행
+  - DB 구성 스크립트(`rocky9-3`): `mysql-server` 설치·시작, `3306/tcp` 허용, `mysql -uroot -e "create user ...; grant all privileges ...; create database word;"` 실행
+  - 이번 주 Linux 명령어 숙제: `awk`, `sed`
+- 4교시: 오전 수업 복습
+- 5교시: 전체 학습 범위 복습 목록 정리
+  - 기본 명령어, 파일 및 디렉토리 관리, 사용자 관리, `storage` 관리, 패키지 관리, 프로세스 관리, 서버(`dhcp`, `dns`, `ftp`, `web`, `mail`)
+- 6, 7교시: 3 Tier 구성
+  - 접속 로그 확인: `tail -F /var/log/httpd/access_log`로 WordPress 설치 요청(`/wp-admin/install.php`, 응답 `200`)이 WAS(`10.0.0.13` 대상 요청)로 들어오는 흐름 확인
+  - GNS3 외부 통신(`R2` NAT)
+    - `test1` 프로젝트 열기, 전체 전원 켜기, `nmtui`로 네트워크 활성화
+    - `R2` 콘솔: 기존 기본 경로(`172.16.0.1`) 삭제 → `f0/1`에 외부 대역(`10.10.34.x/24`) 주소 지정과 `no sh` → 기본 경로를 외부 게이트웨이로 지정
+    - NAT: `f0/0`에 `ip nat inside`, `f0/1`에 `ip nat outside`, `access-list 1 permit`으로 서울 `10.0.0.0/24`, 부산 `10.0.1.0/24`, 라우터 간 `172.16.0.0/30` 허용, `ip nat inside source list 1 interface f0/1 overload` 적용
+    - GNS3 VirtualBox VM 템플릿에 `W2K22-AD`, `W2K22-MEM1` 추가, 주소: `W2K22-AD` `10.0.0.2`, `W2K22-MEM1` `10.0.1.2`, `w11` `10.0.0.101`
+  - Windows 3 Tier 구성(6, 7교시 실습): `AD`(WAS), `MEM1`(DB), `MEM2`(WEB)
+    - `AD`: `C:\wordpress`, `C:\php`, 사이트 `shkwon_word`, PHP Manager
+    - `MEM1`(DB): MySQL Installer 설치 후 `create database word;`, `show databases;`, `mysql.user` 조회
+    - `MEM2`(WEB): `requestRouter_amd64`, `rewrite_amd64` 설치로 ARR, URL Rewrite 추가
+      - IIS 서버 노드의 Application Request Routing → Server Proxy Settings: `Enable proxy` 선택(HTTP version `Pass through`, `Keep alive`, 시간 제한 `120`초, `X-Forwarded-For`)
+      - `Use URL Rewrite to inspect incoming requests` 선택, `Reverse proxy`에 WAS 서버 주소 입력
+  - Linux 3 Tier 구성: `rocky9-1`(WAS), `rocky9-2`(WEB), `rocky9-3`(DB)
+    - WAS용 `word.sh`(패키지·WordPress·`sed`·방화벽·`httpd`)와 DB용 스크립트로 서버별 구성 자동화
+- 주말 숙제: 3 Tier 구성과 보고서 작성
+  - Windows 구성 역할: `AD`=WEB, `MEM1`=WAS, `MEM2`=DB
+  - `AD`(WEB): `C:\01_MAIN\index.html`(`W2K22-AD` 문구), ARR `Enable proxy`, `Use URL Rewrite to inspect incoming requests`, `Reverse proxy`에 `MEM1`(`10.0.0.22`) 지정, URL Rewrite의 역방향 프록시 인바운드 규칙 추가
+  - `MEM1`(WAS): `C:\php`, `C:\wordpress`, PHP Manager에서 `PHP 8.5.12`, `php-cgi.exe` 등록
+  - `MEM2`(DB): `word` 데이터베이스와 `shkwon`(Host `%`) 사용자
+  - Host PC 접속 결과: `10.0.0.21`과 `/index.php`는 WordPress 블로그 화면, `/index.html`은 `W2K22-AD` 문구 출력
+  - 문제 해결
+    - 정적 파일(`/index.html`)까지 WAS로 전달되는 문제: 규칙 패턴 `(.*)`이 모든 주소에 일치한 것이 원인, `^(.*\.php)$`로 좁힌 뒤 루트(`/`)도 포함하도록 `^$|^(.*\.php)$`로 변경해 정적 파일은 `AD`, 루트와 PHP 요청은 `MEM1`이 처리
+    - 설치 전 `/index.php` 접속 시 `ERR_TOO_MANY_REDIRECTS` 발생: `10.0.0.22/index.php`에서도 같은 오류가 나고 기본 주소는 정상이라, 접속 주소에 `index.php`를 붙인 상태로 설치 경로가 반복되는 것이 원인, `/wp-admin/install.php`에서 설치를 마친 뒤 `/index.php`가 정상 출력
+  - 개선점: `MEM1`의 `80`은 `AD`에서 온 연결만 허용, `MEM2`의 `3306`은 WAS에서만 접근하고 DB 계정 권한을 `word` 데이터베이스로 한정, WordPress 업로드 파일은 Web과 WAS가 함께 쓰는 공유 저장소에 보관
+
 ## 🎯 학습 목표
 
 - VMware 기반 가상화 실습 환경 구축
@@ -886,6 +964,8 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - SMTP·POP3·IMAP 동작 원리 이해와 Windows(hMailServer)·Linux(sendmail, Dovecot) 메일 서버 구성
 - NFS 서버·클라이언트 구성을 통한 네트워크 파일 공유 이해
 - IIS(PHP)와 MySQL을 분리한 WordPress 3계층 구성
+- Web, WAS, DB 역할을 분리한 3 Tier 구조 설계와 ARR 기반 역방향 프록시 구성
+- 셸 스크립트와 `sed`를 활용한 서버 구성 자동화
 - 클라우드 환경의 취약점 이해와 보안 구축 능력 향상
 
 ## 🔗 참고 링크
