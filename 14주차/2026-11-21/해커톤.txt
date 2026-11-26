@@ -1,0 +1,9 @@
+해커톤 제출용 레파지토리
+· https://github.com/kgmscss8/2026-Hackathon-chaltteok
+
+최종 배포 사이트
+· https://chaltteok-phi.vercel.app/
+
+해커톤 내 담당파트
+·  Github & Vercel 연동 및 각 파트 개발 도움
+·  Github README.md 작성 (with ChatGPT)
