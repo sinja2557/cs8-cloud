@@ -9,7 +9,7 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - **학습 기간:** 2026-11-02 ~ 2027-03-12
 - **교육 과정:** 경기인력개발원 Microsoft Cyber Security 8회차
 - **주요 학습 분야:** 클라우드 취약점, 시큐어 코딩, 클라우드 시스템 보안, 하이브리드 클라우드 보안 구축, Azure 클라우드 인프라, 데이터·앱 보안, 행위 기반 보안 탐지, 시스템 모의해킹
-- **주요 학습 도구:** VMware Workstation, Rocky Linux 9, Windows Server 2022, Windows 10·11, Xshell, FileZilla, IIS, Apache httpd, hMailServer, sendmail, Dovecot, Thunderbird, NFS, PHP, PHP Manager for IIS, MySQL, WordPress, ARR, URL Rewrite, BIND, Sysinternals(BGInfo), GNS3, VirtualBox
+- **주요 학습 도구:** VMware Workstation, Rocky Linux 9, Windows Server 2022, Windows 10·11, Xshell, FileZilla, IIS, Apache httpd, hMailServer, sendmail, Dovecot, Thunderbird, NFS, PHP, PHP Manager for IIS, MySQL, WordPress, ARR, URL Rewrite, HAProxy, BIND, Azure(가상 머신, DNS 영역), 라우팅 및 원격 액세스(VPN), Sysinternals(BGInfo), GNS3, VirtualBox
 
 ## 🗂️ 학습 목차
 
@@ -18,6 +18,7 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 | 1 | [12주차](./12주차/) | VMware 가상화 실습 환경 구축, Linux 기본 명령어, 사용자·그룹 관리, ACL, 압축·스토리지·LVM 관리, Windows Server 공유 권한 및 DHCP 구성 |
 | 2 | [13주차](./13주차/) | Linux 패키지 관리(dnf, rpm, 소스 설치), vi 편집기, Linux DHCP 서버 구성, FTP 서버 구성(Linux vsftpd, Windows IIS, Passive 모드, 사용자 격리), DNS 서버(BIND) 주·보조 구성, Windows 계정 정책·보안 옵션, Windows IIS 웹·DNS 서버 구성, IIS 가상 호스트·접근 제어, Windows DNS 스텁 영역, GNS3 기반 라우터 실습 환경 구축 |
 | 3 | [14주차](./14주차/) | Linux 웹 서버(Apache httpd) 구성, `httpd.conf` 주요 설정, 호스트 이름 기반 가상 호스트, IP 기반 접근 제어, `.htaccess` 기본 인증, DNS·웹 서버 복습, 메일 서버(SMTP·POP3·IMAP) 개념과 구성(hMailServer, sendmail, Dovecot), Linux NFS 서버와 Linux·Windows 클라이언트 구성, Windows IIS 기반 WordPress·MySQL 구성, Linux·Windows 3 Tier(Web·WAS·DB) 웹 서비스 구축(ARR, URL Rewrite), GNS3 라우터 NAT 구성 |
+| 4 | [15주차](./15주차/) | 프록시(Forward·Reverse) 개념, Linux NAT 라우터와 HAProxy 로드 밸런싱, SSH 공개키 인증과 점프 박스(터널링), Azure 클라우드 개념과 Azure DNS·웹 서버 구축(가비아 네임서버 연동), Windows NAT·VPN(라우팅 및 원격 액세스), Linux 3 Tier(HAProxy·Apache·PHP·MySQL) 구축과 보고서 |
 
 > 각 폴더의 세부 학습 내용은 해당 폴더에서 확인할 수 있습니다. 실제 실습 기록은 아래 날짜별 학습 기록에서도 확인할 수 있습니다.
 
@@ -158,7 +159,38 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - Windows: IIS ARR(Application Request Routing)과 URL Rewrite로 Web 서버가 요청을 WAS로 전달하는 역방향 프록시 구성
 - `access_log` 실시간 확인으로 요청 흐름 검증, 3 Tier 구축 보고서 작성
 
-### 22. 클라우드 보안 학습 확장
+### 22. 프록시와 로드 밸런서(HAProxy)
+
+- Forward Proxy와 Reverse Proxy 개념, 대표 도구(HAProxy, NGINX, Envoy)
+- Linux NAT 라우터 구성(`ip_forward`, `firewall-cmd --direct`의 `MASQUERADE`·`FORWARD` 규칙)과 Source NAT·Destination NAT 개념
+- HAProxy `frontend`·`backend` 설정과 `roundrobin` 방식 부하 분산(WordPress 서버 2대)
+
+### 23. SSH 공개키 인증과 점프 박스
+
+- 대칭키와 공개키(RSA) 방식 비교, 소인수분해 기반 안전성과 양자컴퓨터 위협
+- `ssh-keygen`으로 키 생성, 공개키를 `authorized_keys`에 등록해 비밀번호 없이 접속
+- Xshell 공개키 인증과 터널링으로 `rocky9-1`(점프 박스, bastion)을 거쳐 내부 서버 접속
+
+### 24. Azure 클라우드 인프라(VM·DNS)
+
+- 클라우드 정의와 특징 5가지, Private·Public·Hybrid, 공유 책임 모델, CSP와 MSP
+- 리소스 그룹, 가상 네트워크, Rocky Linux VM, 공용 IP 접두사, 네트워크 보안 그룹(NSG) 구성
+- Azure 위에 BIND 주·보조 DNS와 웹 서버 구성, 가비아 네임서버 등록, Azure 공용 DNS 영역 생성
+- 실습 후 DNS 레코드·영역·리소스 그룹을 순서대로 삭제하는 비용 관리
+
+### 25. Windows NAT와 VPN
+
+- Windows Server 라우팅 및 원격 액세스(RRAS)로 LAN 라우팅·NAT 구성
+- VPN 개념(터널링, 암호화, AH·ESP·IKE), Site to Site(IPsec)와 Point to Site(SSL VPN) 비교
+- Windows 클라이언트 VPN 접속과 공유 폴더 접근, GNS3 환경에서 같은 구성 재현
+
+### 26. Linux 3 Tier 구축
+
+- DB → WAS → WEB 순서 구축, 서버별 셸 스크립트(`db.sh`, `wp.sh`, `haproxy.sh`) 실행
+- HAProxy로 `.php` 요청은 WAS, 그 외 요청은 WEB 내부 `httpd`(`8080`)로 분기
+- WordPress 설치 후 리디렉션 문제 조치와 구축 보고서 작성
+
+### 27. 클라우드 보안 학습 확장
 
 - 클라우드 취약점 및 시큐어 코딩
 - 클라우드 시스템 보안 및 하이브리드 클라우드 보안 구축
@@ -946,6 +978,161 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
     - 설치 전 `/index.php` 접속 시 `ERR_TOO_MANY_REDIRECTS` 발생: `10.0.0.22/index.php`에서도 같은 오류가 나고 기본 주소는 정상이라, 접속 주소에 `index.php`를 붙인 상태로 설치 경로가 반복되는 것이 원인, `/wp-admin/install.php`에서 설치를 마친 뒤 `/index.php`가 정상 출력
   - 개선점: `MEM1`의 `80`은 `AD`에서 온 연결만 허용, `MEM2`의 `3306`은 WAS에서만 접근하고 DB 계정 권한을 `word` 데이터베이스로 한정, WordPress 업로드 파일은 Web과 WAS가 함께 쓰는 공유 저장소에 보관
 
+### 2026-11-21 (해커톤)
+
+> 14주차 주말 해커톤 기록
+
+- 해커톤 제출용 저장소: [2026-Hackathon-chaltteok](https://github.com/kgmscss8/2026-Hackathon-chaltteok)
+- 최종 배포 사이트: [chaltteok-phi.vercel.app](https://chaltteok-phi.vercel.app/)
+- 담당 파트
+  - GitHub와 Vercel 연동, 각 파트 개발 지원
+  - GitHub `README.md` 작성(ChatGPT 활용)
+
+### 2026-11-23 (69일차)
+
+> 15주차 첫째 날. 주제: 프록시, Linux NAT 라우터와 HAProxy, SSH 공개키 인증
+
+- 1교시: 프록시 개념과 구성 준비
+  - Forward Proxy: 내부 사용자가 외부로 나갈 때 대신 요청
+  - Reverse Proxy: 외부 요청을 받아 내부 서버로 전달
+  - 대표 도구: `HAProxy`, `NGINX`, `ENVOY`
+  - 구성: `rocky9-1`(HAProxy, NAT 겸용), `rocky9-2`·`rocky9-3`(WordPress, PHP), `rocky9-4`(MySQL)
+  - 스냅샷 초기 설정 후 `rocky9-1`에 Network Adapter 1개 추가(Host-only), `rocky9-2`~`rocky9-4`는 Host-only로 변경
+  - `rocky9-1`의 `ens192`에 Host-only 주소 `172.16.0.11/24` 설정, 나머지 서버는 `172.16.0.21`~`.23`에 게이트웨이 `172.16.0.11` 지정 후 ping 확인
+- 2교시: Linux NAT 라우터와 HAProxy
+  - 용어: Source NAT(SNAT), Destination NAT(DNAT)
+  - `rocky9-1` NAT 구성
+    - `echo "net.ipv4.ip_forward = 1" > /etc/sysctl.d/ip_forward.conf`
+    - `firewall-cmd --permanent --direct --add-rule ipv4 nat POSTROUTING 0 -o ens160 -j MASQUERADE`
+    - `firewall-cmd --permanent --direct --add-rule ipv4 filter FORWARD 0 -i ens192 -o ens160 -j ACCEPT`
+    - `firewall-cmd --reload`
+  - `rocky9-2`~`rocky9-4`에서 외부(`8.8.8.8`, `google.com`) ping 확인
+  - 서버별 패키지: `rocky9-1` HAProxy·lynx, `rocky9-2`·`rocky9-3` WordPress·`word.sh`, `rocky9-4` DB·`mysql.sh`
+  - `curl`로 WAS 확인 시 PHP를 처리하지 못해 페이지가 정상 출력되지 않아, 텍스트 브라우저 `lynx`로 확인
+  - `/etc/haproxy/haproxy.cfg`: `frontend`에 `bind *:80`, `backend app`에 `roundrobin`과 WAS 2대(`server app1`, `app2`, 포트 `80`, `check`) 지정
+  - 방화벽 `80/tcp` 허용 후 `10.0.0.11/index.html` 접속, 각 서버 `index.html`에 `$HOSTNAME`을 출력해 `rocky9-3`, `rocky9-2`가 번갈아 표시되는 것으로 라운드 로빈 확인
+- 3교시: 스냅샷 초기화 후 `rocky9-1`~`rocky9-4` 구성
+  - `rocky9-1`: 어댑터 추가(Host-only), `nmtui`로 `ens192` 이름과 IP(`172.16.0.11`) 설정, `reboot`
+  - `rocky9-2` `172.16.0.21`, `rocky9-3` `172.16.0.22`, `rocky9-4` `172.16.0.23`: Host-only 변경, 게이트웨이 `172.16.0.11`
+- 4교시: DNS 서버 추가(`rocky9-5`)
+  - `rocky9-5`(NAT, `10.0.0.31`)에 BIND 구성(`named.conf`, 영역 파일, `53/tcp,udp` 허용, `named` 시작)
+  - 사용자 PC(`10.0.0.101`)의 DNS를 `10.0.0.31`로 지정, `nslookup`으로 `shkwon.local`, `www.shkwon.local`이 `10.0.0.11`로 조회되는 것 확인
+  - `www.shkwon.local/wp-admin/install.php`로 WordPress 설치 화면 접속
+- 5교시: 스냅샷 초기화 후 복습
+  - 서버 구성표(`rocky9-1`~`rocky9-5`, 사용자 PC) 정리, `rocky9-1` 방화벽 설명
+  - Figma로 WordPress 인프라 구성도 작성
+- 6교시: SSH 공개키 인증
+  - 대칭키 문제: 키 전달, 키 보관
+  - 공개키(RSA): 소인수분해의 난해함 이용, 안전한 키 길이 `2048bit` 이상 권장, 양자컴퓨터 큐비트 등장으로 키 길이를 늘리는 추세와 양자 내성 암호 필요
+  - 기존 ID·Password 방식 개선: 접속자는 개인키, 접속 대상 시스템은 공개키 저장, 패스워드 불필요
+  - `ssh-keygen -m PEM -b 2048 -t rsa -q -N ""`(`-f` 출력 파일, `-m` 키 형식), 접속 시 `ssh -i` 옵션으로 개인키 지정
+  - `scp .ssh\id_rsa.pub root@10.0.0.11:/root/.ssh/authorized_keys`로 공개키 등록(`id_rsa` 개인키, `id_rsa.pub` 공개키)
+  - `rocky9-1`에서 `chmod 600 .ssh/id_rsa` 후 `authorized_keys`를 `rocky9-2`~`rocky9-4`로 복사해 `ssh`로 접속, 확인 후 키와 `.ssh` 파일 삭제 연습
+  - `puttygen`으로 키 생성 후 저장, `/etc/ssh/sshd_config`의 `AuthorizedKeysFile` 확인
+- 7교시: 터널링을 이용한 개인키 없는 접속
+  - Host의 키 파일 삭제, 공개키를 메모장으로 연 뒤 맨 뒤 공백 제거
+  - Xshell 세션을 Public Key 방식으로 등록, `rocky9-2`~`rocky9-4`까지 모두 등록
+  - `rocky9-1`을 점프 박스(bastion)로 두고 내부 서버에 접속하는 구성
+
+### 2026-11-24 (70일차)
+
+> 주제: Azure 클라우드 개념과 Azure 위 DNS·웹 서버 구축
+
+- 1교시: 클라우드 개념과 Azure 리소스 생성
+  - 클라우드 정의: 언제 어디서나 인터넷 연결만 가능하면 관리자 개입 없이 비용을 지불하고 자원을 즉시 사용
+  - 특징 5가지: Broadband Network, On Demand Self Service, Rapid Elastic, Measured Service, Resource Pooling
+  - Private Cloud(VMware vSphere, OpenStack 등), Public Cloud(AWS, Azure, GCP, NCP 등), 둘을 합친 Hybrid Cloud
+  - 공유 책임 모델: IaaS, PaaS, SaaS 구분
+  - CSP(Cloud Service Provider)와 MSP(Managed Service Provider, 구축·운영 대행)
+  - 리소스 그룹 `08-shkwon-rg` 생성(태그는 비용 관리용)
+  - 가상 네트워크 `shkwon-vnet`(`10.0.0.0/16`)과 서브넷 3개(`ns1` `10.0.0.0/24`, `ns2` `10.0.1.0/24`, `web` `10.0.2.0/24`)
+- 2교시: VM·네트워크 구성
+  - Rocky Linux 9 VM `shkwon-ns1`, `shkwon-ns2`, `shkwon-web` 생성(`Standard_B1ms`, SSH 공개키 인증, 표준 SSD, 공용 IP 없음)
+  - 공용 IP 접두사(`/30`) 생성 후 공용 IP 3개(`ns1`, `ns2`, `web`)를 고정 주소로 만들어 각 네트워크 인터페이스에 연결
+  - 네트워크 보안 그룹(NSG) 생성: `shkwon-nsg-ssh`(`ssh`, `dns-udp`, `dns-tcp`), `shkwon-nsg-web`(`ssh`, `http`)에 인바운드 보안 규칙 추가 후 네트워크 인터페이스와 연결
+  - 가비아 네임서버 등록: 호스트 `ns1.shkwon.shop`, `ns2.shkwon.shop`에 공용 IP 지정 후 도메인 `shkwon.shop`의 네임서버 변경
+  - Xshell로 Azure VM 접속, `setenforce 0`으로 SELinux 해제
+- 3교시: Azure 위 DNS·웹 서버 설정
+  - `azure-ns1` 주 DNS: `named.conf`에 `shkwon.shop` 정방향 영역과 역방향 영역(`master`) 추가, 영역 파일에 `NS`, `A`(`www`, `ns1`, `ns2`), `PTR` 작성
+  - `azure-ns2` 보조 DNS: `/var/named`에 영역 파일 생성 확인
+  - `azure-web1` 웹 서버: `httpd` 시작 후 `index.html` 작성, IP와 `shkwon.shop`으로 접속 확인
+  - 가비아 DNS 호스트에서 공백 도메인 칸 제거
+  - `nslookup`으로 도메인 조회 성공(`ns1`, `ns2` 전파에 시간이 걸림), `dig shkwon.shop +trace @168.126.63.1`로 네임서버 전파 확인(아직 업데이트되지 않은 상태 확인)
+- 4교시: Azure 공용 DNS 영역
+  - 공용 DNS 영역 `shkwon.shop` 생성, 레코드 집합 확인(Azure NS 4개)
+  - 정리 순서: DNS 레코드 삭제 → DNS 영역 삭제 → 리소스 그룹 삭제(복습 후 바로 삭제, 백업·보관 금지)
+- 5교시: Windows 3 Tier 복습(구성체계표)
+  - 역할: `AD` IIS(WEB)·URL Rewrite·ARR, `MEM1` IIS(WEB+CGI+PHP)·WordPress·PHP·PHP Manager for IIS, `MEM2` MySQL(Database)
+  - 자원 목록표(Excel) 작성, `AD`·`MEM1`·`MEM2`에 Network Adapter 추가(Host-only), MAC 주소 확인, `172.16` 대역 ping 확인
+- 6, 7교시: Windows 3 Tier 구성 복습
+  - ARR Server Proxy 설정과 URL Rewrite 인바운드 규칙(패턴 `.*`, `^(.*\.php)$`)으로 요청을 WAS로 전달
+- 숙제(다음 주까지)
+  - Linux 3 Tier 구성 알아보기, 보고서 작성(docx, 문체는 존댓말 금지)
+  - 프로젝트 관련 기술: `docker`, `kubernetes`, `terraform`, `ansible`, AWS·NCP, CI/CD
+- 구성 체계 정리 자료: `구성 체계.pdf`(Azure 리소스, 도메인, 네임서버 구성)
+
+### 2026-11-25 (71일차)
+
+> 주제: Windows NAT·VPN, GNS3 구성, Linux 3 Tier 구축
+
+- 1교시: Windows NAT(`W2K22-AD` 라우터)
+  - `AD`에 Network Adapter 3개 추가: `vmnet1` `172.16.0.254`, `vmnet2` `192.168.0.254`, `vmnet3` `10.10.10.254`(기존 NAT는 외부 연결)
+  - 각 VM 어댑터 변경: `MEM1` `vmnet1`(`172.16.0.11`), `MEM2` `vmnet2`(`192.168.0.11`), `W10-1`·`W11-1` `vmnet3`(`10.10.10.x`), 각 VM에 IP·게이트웨이 설정
+  - 자원량 개념: 시간에 따른 사용량 변화와 클라우드의 탄력적 자원 사용(손그림 정리)
+  - `AD` 역할 추가: 원격 액세스(DirectAccess 및 VPN(RAS), 라우팅), 설치 후 서비스 시작
+  - 도구 > 라우팅 및 원격 액세스 > 구성 및 사용: 사용자 지정 구성에서 `VPN 액세스`, `NAT`, `LAN 라우팅` 선택
+  - IPv4 > NAT에서 새 인터페이스(`Ethernet0`)를 공용 인터페이스로 지정하고 NAT 사용
+  - `W11-1`에서 `172.16.0.11`, `192.168.0.11`, 외부 주소 ping 응답 확인
+- 2교시: VPN(Virtual Private Network)
+  - 핵심: 터널링, 암호화(AH 인증, ESP 암호화, IKE 키 교환)
+  - Site to Site: 지점 간 연결(장비 대 장비), IPsec VPN(3계층), 예) 편의점 ↔ 본사
+  - Point to Site: 외부 사용자(사용자 대 장비), SSL VPN(4계층), 접속 프로그램 별도 사용
+  - `AD` 설정
+    - 라우팅 및 원격 액세스 포트에서 WAN Miniport(SSTP, IKEv2, L2TP, PPTP 등) 최대 포트 수를 `5`개로 제한
+    - 사용자 `a` 생성 후 속성에서 원격 접속 허용
+    - `W2K22-AD` 속성 > IPv4: 정적 주소 풀 `192.168.0.201`~`210`, 어댑터 `vmnet2`
+    - 보안 탭은 기본값(Windows 인증) 유지
+  - 클라이언트: 설정 > 네트워크 및 인터넷 > VPN에서 VPN 연결 추가(서버 주소, 사용자 이름), 접속이 안 되면 VPN 종류를 `PPTP`로 변경
+  - 기존 네트워크 사용 방법: VMware Virtual Network Editor에서 `VMnet0`을 Bridged로 설정
+- 3, 4교시: 팀 실습
+  - 팀원이 각자 VPN으로 접속해 `MEM1` 공유 폴더(`shkwon`)에 파일 생성
+- 5교시: GNS3에서 구성
+  - VirtualBox 스냅샷 생성, 구성도의 필요한 장비만 전원 켜기
+  - `W2K22-MEM2` 생성 및 네트워크 변경, GNS3 VirtualBox VM 템플릿 설정
+  - 라우터 2대, 스위치 2대로 구성한 대역(`AD`·`W11-1`, `MEM1` 등) 배치
+- 6교시: GNS3 환경 VPN 확인
+  - `W11`에서 VPN 연결(`shkwon-gns-vpn`) 후 `192.168.0.11` ping, 공유 폴더 접근 확인
+- 7교시(자습): Linux 3 Tier 구축
+  - 구축 순서 DB → WAS → WEB
+
+    | 역할 | 서버 | 패키지 | 주소 | 포트 |
+    |---|---|---|---|---|
+    | WEB | `rocky9-1` | `haproxy`, `httpd`, `lynx` | `10.0.0.11`(NAT), `172.16.0.11`(Host-only) | `80`(HAProxy), `8080`(httpd) |
+    | WAS | `rocky9-2` | `httpd`, `mysql`, `php`, `php-mysqlnd`, `tar`, `wget`, WordPress | `172.16.0.21` | `80` |
+    | DB | `rocky9-3` | `mysql-server` | `172.16.0.22` | `3306` |
+
+  - 요청 흐름: Client → HAProxy(`80`) → `/`, `/index.html`은 WEB `httpd`(`127.0.0.1:8080`), `/index.php`는 WAS `httpd`(`172.16.0.21:80`) → PHP 실행 → DB(`172.16.0.22:3306`)
+  - 접속 준비: VMware 어댑터 변경 후 `ssh-keygen` 공개키를 `scp`로 `rocky9-1`에 넣고 Xshell로 접속, `rocky9-2`, `rocky9-3`에도 공개키를 넣어 접속
+  - 서버별 스크립트
+    - `haproxy.sh`(`rocky9-1`): HAProxy·`httpd`·`lynx` 설치, `ip_forward`, `MASQUERADE`·`FORWARD` 규칙, `80/tcp` 허용, `reboot`
+    - `wp.sh`(`rocky9-2`): 패키지 설치, WordPress 다운로드·압축 해제·복사, `sed -i`로 `DirectoryIndex`와 `wp-config.php` 값 치환, `80/tcp` 허용, `httpd` 시작
+    - `db.sh`(`rocky9-3`): `mysql-server` 설치·시작, `3306/tcp` 허용, 사용자·권한·`word` 데이터베이스 생성
+  - 실행 순서: ① WEB NAT 설정 스크립트, ② DB 스크립트(외부 ping 확인 후), ③ WAS 스크립트
+  - 확인: WAS에서 `lynx`로 `index.php` 테스트, DB의 `word` 데이터베이스와 `shkwon`(Host `%`) 사용자 조회, WEB `index.html`에 `WEB SERVER` 문구 작성
+  - WEB 설정: `httpd.conf`의 `Listen 80`을 `Listen 8080`으로 변경, `/etc/haproxy/haproxy.cfg`에 `acl is_php path_end -i .php`, `use_backend app if is_php`, `default_backend static`, `backend static`(`*:8080`), `backend app`(WAS `172.16.0.21:80`) 설정
+  - 방화벽: WEB·WAS `80/tcp`, DB `3306/tcp` 확인
+  - Host PC에서 `10.0.0.11`(통합 웹 포털 화면), `/index.html`, `/wp-admin/install.php`(WordPress 설치 화면) 접속
+  - 문제: 설치 후 `/wp-admin/`에서 `Not Found`, `index.php` 요청에도 WEB `index.html` 화면이 반복되는 리디렉션 문제
+  - 해결: WAS에서 `wp-pl.sh` 실행, `wp-content/mu-plugins/no-canonical.php`에 `remove_action('template_redirect', 'redirect_canonical');` 작성 후 `apache` 소유권 설정, `10.0.0.11/index.php`에서 블로그 화면 정상 확인
+
+### 2026-11-26 (72일차)
+
+> 주제: Linux 3 Tier 구축 보고서(숙제) 제출 자료
+
+- Linux 3 Tier 구축 보고서(docx) 작성: HAProxy·Apache·PHP·MySQL로 WEB·WAS·DB 분리
+  - 구성: 개요(목적, 서버별 구성, 요청 흐름), 일정, 구축 과정(DB → WAS → WEB), 검증(Host PC 접속), 문제 해결(WordPress 리디렉션), 결론 및 개선점
+  - 개선점: `wp-pl.sh`로 `redirect_canonical`을 해제해 설치 후 WEB `index.html`로 되돌아가는 반복 현상 방지
+
 ## 🎯 학습 목표
 
 - VMware 기반 가상화 실습 환경 구축
@@ -966,6 +1153,10 @@ VMware 기반 가상화 실습 환경 구축부터 Linux·Windows Server 운영�
 - IIS(PHP)와 MySQL을 분리한 WordPress 3계층 구성
 - Web, WAS, DB 역할을 분리한 3 Tier 구조 설계와 ARR 기반 역방향 프록시 구성
 - 셸 스크립트와 `sed`를 활용한 서버 구성 자동화
+- Linux NAT 라우터와 HAProxy를 활용한 로드 밸런싱·요청 경로 분기 이해
+- SSH 공개키 인증과 점프 박스를 활용한 안전한 서버 접속 방식 이해
+- Azure 가상 머신, 네트워크 보안 그룹, DNS를 활용한 클라우드 웹 서비스 구성
+- Windows NAT·VPN 구성과 Linux 3 Tier 구축 보고서 작성
 - 클라우드 환경의 취약점 이해와 보안 구축 능력 향상
 
 ## 🔗 참고 링크
